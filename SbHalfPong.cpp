@@ -71,7 +71,7 @@ private:
   int xPos_ = SCREEN_WIDTH - 50;
   int yPos_ = 200;
   double yVel_ = 0;
-  double velocity_ = 0.5;
+  double velocity_ = 0.6;
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
 };
@@ -91,8 +91,8 @@ private:
   int height_ = 25;
   int xPos_ = 50;
   int yPos_ = 300;
-  double yVel_ = 0;
-  double xVel_ = 0;
+  double yVel_ = 0.5;
+  double xVel_ = 0.5;
   double velocity_ = 0.5;
   SbTexture* texture_ = nullptr;
   //  SDL_Color color = {210, 160, 10, 0};
@@ -319,10 +319,30 @@ Ball::~Ball()
 
 
 void
+Ball::move(Uint32 deltaT)
+{
+  int y_velocity = yVel_ * deltaT;  
+  int x_velocity = xVel_ * deltaT;
+  yPos_ += y_velocity;
+  xPos_ += x_velocity;
+  if( ( yPos_ <= 0 ) || ( yPos_ + height_ >= SCREEN_HEIGHT ) ) {
+    yVel_ *= -1;
+  }
+  if( ( xPos_ <= 0 ) || ( xPos_ + width_ >= SCREEN_WIDTH ) ) {
+    xVel_ *= -1;
+  }
+}
+
+
+
+void
 Ball::render()
 {
   if ( texture_ ) texture_->render( xPos_, yPos_);
 }
+
+
+
 
 
 
@@ -411,6 +431,7 @@ int main()
 	fpsTimer.start();
       }
       paddle.move( frameTimer.getTime() );
+      ball.move( frameTimer.getTime() );
       frameTimer.start();
       SDL_RenderClear( gRenderer );
       paddle.render();
