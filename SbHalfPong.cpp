@@ -6,6 +6,7 @@ author: Ulrike Hager
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <climits>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -40,22 +41,22 @@ private:
 class SbTimer
 {
 public:
-  SbTimer();
+  SbTimer() = default;
   void start();
   void stop();
-  void pause();
-  void resume();
+  // void pause();
+  // void resume();
   /*! All times in ms
    */
   Uint32 getTime();
   bool started(){ return started_ ;}
-  bool paused();
+  //  bool paused();
 
 private:
-  Uint32 startTime_;
-  Uint32 pauseTime_;
-  bool paused_;
-  bool started_;
+  Uint32 startTime_ = 0;
+  // Uint32 pauseTime_;
+  // bool paused_;
+  bool started_ = false;
 };
 
 
@@ -87,7 +88,6 @@ void close();
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 TTF_Font *fpsFont = nullptr;
-
 
 /*! SbTexture implementation
  */
@@ -122,6 +122,7 @@ SbTexture::createFromFile( const std::string& filename )
 SbTexture*
 SbTexture::createFromRectangle( int width, int height, const SDL_Color& color )
 {
+  clear();
   texture_ = SDL_CreateTexture(gRenderer, 0, SDL_TEXTUREACCESS_TARGET, width, height);
   if (texture_ == nullptr) 
     throw std::runtime_error("Failed to create texture " + std::string( SDL_GetError() ));
@@ -147,8 +148,11 @@ SbTexture::createFromRectangle( int width, int height, const SDL_Color& color )
 SbTexture*
 SbTexture::createFromText( const std::string& text, const SDL_Color& color )
 {
+#ifdef DEBUG
+  std::cout << "[SbTexture::createFromText]" << std::endl;
+#endif
+  
   clear();
-
   SDL_Surface *surf = TTF_RenderText_Solid(fpsFont, text.c_str(), color);
   if (surf == nullptr)
     throw std::runtime_error("Failed to create surface from text: " + std::string( SDL_GetError() ));
@@ -158,6 +162,7 @@ SbTexture::createFromText( const std::string& text, const SDL_Color& color )
   if (texture_ == nullptr) 
     throw std::runtime_error("Failed to create texture " + std::string( SDL_GetError() ));
 
+  SDL_QueryTexture( texture_, nullptr, nullptr, &width_, &height_ );
   return this;
 }
 
@@ -168,6 +173,40 @@ SbTexture::render( int x, int y, SDL_Rect* sourceRect)
   SDL_Rect destRect = { x, y, width_, height_ };
   SDL_RenderCopy( gRenderer, texture_, sourceRect, &destRect );
 }
+
+
+
+/*! SbTimer implementation
+ */
+
+void
+SbTimer::start()
+{
+  started_ = true;
+  startTime_ = SDL_GetTicks();
+}
+
+
+void
+SbTimer::stop()
+{
+  started_ =false;
+  // When stopped, the timer will return the time interval between start and stop. This is saved in startTime_ until the timer is restarted.
+  startTime_ = SDL_GetTicks() - startTime_;
+}
+
+
+Uint32
+SbTimer::getTime()
+{
+  Uint32 time = 0;
+  if ( started_ )
+    time = SDL_GetTicks() - startTime_;
+  else
+    time = startTime_;
+  return time;
+}
+
 
 
 
@@ -282,10 +321,15 @@ int main()
   try {
     init();
     Paddle paddle;
-
+    SbTexture *fpsTexture = new SbTexture();
+    SDL_Color fpsColor = {210, 160, 10, 0};
+    SbTimer fpsTimer;
+    
     SDL_Event event;
     bool quit = false;
-
+    int frameCounter = 0;
+    fpsTimer.start();
+    
     while (!quit) {
       while( SDL_PollEvent( &event ) ) {
 	if (event.type == SDL_QUIT) quit = true;
@@ -293,9 +337,20 @@ int main()
 	paddle.handleEvent(event);
       }
 
+      if ( frameCounter > 0 && frameCounter < INT_MAX ) {
+	double average = double(frameCounter)/ ( fpsTimer.getTime()/1000.0 ) ;
+	std::string fpsText = std::to_string(int(average)) + " fps";
+	fpsTexture->createFromText(fpsText, fpsColor);
+      }
+      else {
+	frameCounter = 0;
+	fpsTimer.start();
+      }
       SDL_RenderClear( gRenderer );
       paddle.render();
+      fpsTexture->render(10,10);
       SDL_RenderPresent( gRenderer );
+      ++frameCounter;  
     }
     close();
   }
