@@ -24,7 +24,7 @@ public:
   SbTexture() = default;
   ~SbTexture();
 
-  SbTexture* createFromFile( const std::string& filename );
+  SbTexture* createFromFile( const std::string& filename, int width = 0, int height = 0);
   SbTexture* createFromRectangle( int width, int height, const SDL_Color& color );
   SbTexture* createFromText( const std::string& text, const SDL_Color& color );
   void clear();
@@ -44,18 +44,13 @@ public:
   SbTimer() = default;
   void start();
   void stop();
-  // void pause();
-  // void resume();
   /*! All times in ms
    */
   Uint32 getTime();
   bool started(){ return started_ ;}
-  //  bool paused();
 
 private:
   Uint32 startTime_ = 0;
-  // Uint32 pauseTime_;
-  // bool paused_;
   bool started_ = false;
 };
 
@@ -79,8 +74,30 @@ private:
   double velocity_ = 0.5;
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
-} ;
+};
 
+
+
+class Ball
+{
+public:
+  Ball();
+  ~Ball();
+  void move(Uint32 deltaT);
+  void render();
+  
+private:
+  int width_ = 25;
+  int height_ = 25;
+  int xPos_ = 50;
+  int yPos_ = 300;
+  double yVel_ = 0;
+  double xVel_ = 0;
+  double velocity_ = 0.5;
+  SbTexture* texture_ = nullptr;
+  //  SDL_Color color = {210, 160, 10, 0};
+};
+  
 
 void init();
 void close();
@@ -112,9 +129,29 @@ SbTexture::clear()
 
 
 SbTexture*
-SbTexture::createFromFile( const std::string& filename )
+SbTexture::createFromFile( const std::string& filename, int width, int height )
 {
-  std::cout << "[SbTexture::createFromFile] to be continued..." << std::endl;
+  texture_ = IMG_LoadTexture(gRenderer, filename.c_str());
+  
+  if( texture_ == nullptr )
+    throw std::runtime_error("Unable to create texture from " + filename + " " + SDL_GetError() );
+
+  /*! Should be plotted with the specified width, height 
+   */
+  if ( width > 0 && height > 0 ){
+    width_ = width;
+    height_ = height;
+  }
+  else {
+    SDL_QueryTexture( texture_, nullptr, nullptr, &width_, &height_ );
+    if ( width > 0 ) {
+      width_ = width;
+    }
+    else if ( height > 0 ) {
+      height_ = height;
+    }
+  }
+  
   return this;
 }
 
@@ -264,6 +301,30 @@ Paddle::render()
 }
 
 
+/*! Ball implementation
+ */
+Ball::Ball()
+{
+  texture_ = new SbTexture();
+  texture_->createFromFile("resources/ball.png", width_, height_ );
+}
+
+
+Ball::~Ball()
+{
+  delete texture_;
+  texture_ = nullptr;
+}
+
+
+
+void
+Ball::render()
+{
+  if ( texture_ ) texture_->render( xPos_, yPos_);
+}
+
+
 
 
 /*! Global functions
@@ -321,6 +382,7 @@ int main()
   try {
     init();
     Paddle paddle;
+    Ball ball;
     SbTexture *fpsTexture = new SbTexture();
     SDL_Color fpsColor = {210, 160, 10, 0};
     SbTimer fpsTimer, frameTimer;
@@ -352,6 +414,7 @@ int main()
       frameTimer.start();
       SDL_RenderClear( gRenderer );
       paddle.render();
+      ball.render();
       fpsTexture->render(10,10);
       SDL_RenderPresent( gRenderer );
       ++frameCounter;  
