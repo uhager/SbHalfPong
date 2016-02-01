@@ -67,7 +67,7 @@ public:
   Paddle();
   ~Paddle();
   void handleEvent(const SDL_Event& event);
-  void move();
+  void move(Uint32 deltaT);
   void render();
   
 private:
@@ -75,8 +75,8 @@ private:
   int height_ = 60;
   int xPos_ = SCREEN_WIDTH - 50;
   int yPos_ = 200;
-  int yVel_ = 0;
-  int velocity_ = 20;
+  double yVel_ = 0;
+  double velocity_ = 0.5;
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
 } ;
@@ -243,16 +243,16 @@ Paddle::handleEvent(const SDL_Event& event)
     case SDLK_DOWN: yVel_ -= velocity_; break;
     }
   }
-  move();
 }
 
 
 void
-Paddle::move()
+Paddle::move(Uint32 deltaT)
 {
-  yPos_ += yVel_;
+  int velocity = yVel_* deltaT; 
+  yPos_ += velocity;
   if( ( yPos_ < 0 ) || ( yPos_ + height_ > SCREEN_HEIGHT ) ) {
-    yPos_ -= yVel_;
+    yPos_ -= velocity;
   }
 }
     
@@ -323,12 +323,14 @@ int main()
     Paddle paddle;
     SbTexture *fpsTexture = new SbTexture();
     SDL_Color fpsColor = {210, 160, 10, 0};
-    SbTimer fpsTimer;
+    SbTimer fpsTimer, frameTimer;
     
     SDL_Event event;
     bool quit = false;
+
     int frameCounter = 0;
     fpsTimer.start();
+    frameTimer.start();
     
     while (!quit) {
       while( SDL_PollEvent( &event ) ) {
@@ -346,6 +348,8 @@ int main()
 	frameCounter = 0;
 	fpsTimer.start();
       }
+      paddle.move( frameTimer.getTime() );
+      frameTimer.start();
       SDL_RenderClear( gRenderer );
       paddle.render();
       fpsTexture->render(10,10);
