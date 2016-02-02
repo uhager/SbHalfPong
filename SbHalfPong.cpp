@@ -47,7 +47,7 @@ class Ball
 public:
   Ball();
   ~Ball();
-  void move(SDL_Rect paddleBox);
+  void move(const SDL_Rect& paddleBox);
   void render();
   
 private:
@@ -144,7 +144,7 @@ Ball::~Ball()
 
 
 void
-Ball::move(SDL_Rect paddleBox)
+Ball::move(const SDL_Rect& paddleBox)
 {
   Uint32 deltaT = timer_.getTime();
   int y_velocity = y_velocity_ * deltaT;  
@@ -152,23 +152,36 @@ Ball::move(SDL_Rect paddleBox)
   bounding_box_.y += y_velocity;
   bounding_box_.x += x_velocity;
   if ( bounding_box_.x + bounding_box_.w >= SCREEN_WIDTH ) {
+    // goal
     bounding_box_.x = 0;
     bounding_box_.y = SCREEN_HEIGHT / 2 ;
     x_velocity = abs(x_velocity);
     timer_.start();
     return;
   }
-  if ( bounding_box_.x + bounding_box_.w >= paddleBox.x       &&
-       ( bounding_box_.y + bounding_box_.h/2) >= paddleBox.y  &&
-       ( bounding_box_.y - bounding_box_.h/2) <= paddleBox.y + paddleBox.h) {
+  
+  bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
+  if ( bounding_box_.x + bounding_box_.w/2 >= paddleBox.x &&
+       bounding_box_.x - bounding_box_.w/2 <= paddleBox.x + paddleBox.w )
+    in_xrange = true;
+      
+  if ( bounding_box_.y + bounding_box_.h/2 >= paddleBox.y  &&
+       bounding_box_.y - bounding_box_.h/2 <= paddleBox.y + paddleBox.h)
+     in_yrange = true;
+
+  if ( bounding_box_.x + bounding_box_.w >= paddleBox.x               &&
+       bounding_box_.x                   <= paddleBox.x + paddleBox.w )
+    x_hit = true;
+
+  if ( bounding_box_.y + bounding_box_.h >= paddleBox.y               &&
+       bounding_box_.y                   <= paddleBox.y + paddleBox.h )
+    y_hit = true;
+
+  if ( ( x_hit && in_yrange ) || bounding_box_.x <= 0  )
     x_velocity_ *= -1;
-  }
-  else if ( ( bounding_box_.x <= 0 ) ) {
-    x_velocity_ *= -1;
-  }
-  if ( ( bounding_box_.y <= 0 ) || ( bounding_box_.y + bounding_box_.h >= SCREEN_HEIGHT ) ) {
+  if ( ( y_hit && in_xrange ) || bounding_box_.y <= 0 || ( bounding_box_.y + bounding_box_.h >= SCREEN_HEIGHT ) )
     y_velocity_ *= -1;
-  }
+ 
   timer_.start();
 }
 
