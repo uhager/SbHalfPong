@@ -38,7 +38,7 @@ SbTexture::clear()
 
 
 SbTexture*
-SbTexture::createFromFile( const std::string& filename, int width, int height )
+SbTexture::from_file( const std::string& filename, int width, int height )
 {
   texture_ = IMG_LoadTexture(gRenderer, filename.c_str());
   
@@ -66,7 +66,7 @@ SbTexture::createFromFile( const std::string& filename, int width, int height )
 
 
 SbTexture*
-SbTexture::createFromRectangle( int width, int height, const SDL_Color& color )
+SbTexture::from_rectangle( int width, int height, const SDL_Color& color )
 {
   clear();
   texture_ = SDL_CreateTexture(gRenderer, 0, SDL_TEXTUREACCESS_TARGET, width, height);
@@ -92,10 +92,10 @@ SbTexture::createFromRectangle( int width, int height, const SDL_Color& color )
 
 
 SbTexture*
-SbTexture::createFromText( const std::string& text, TTF_Font* font, const SDL_Color& color )
+SbTexture::from_text( const std::string& text, TTF_Font* font, const SDL_Color& color )
 {
 #ifdef DEBUG
-  std::cout << "[SbTexture::createFromText]" << std::endl;
+  std::cout << "[SbTexture::from_text]" << std::endl;
 #endif
   
   clear();

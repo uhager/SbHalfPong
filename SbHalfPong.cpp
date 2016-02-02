@@ -7,6 +7,7 @@ author: Ulrike Hager
 #include <sstream>
 #include <stdexcept>
 #include <climits>
+#include <cmath>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -25,19 +26,18 @@ class Paddle
 public:
   Paddle();
   ~Paddle();
-  void handleEvent(const SDL_Event& event);
-  void move(Uint32 deltaT);
+  void handle_event(const SDL_Event& event);
+  void move();
   void render();
+  SDL_Rect get_bounding_box() {return bounding_box_;}
   
 private:
-  int width_ = 20;
-  int height_ = 60;
-  int xPos_ = SCREEN_WIDTH - 50;
-  int yPos_ = 200;
-  double yVel_ = 0;
-  double velocity_ = 0.6;
+  SDL_Rect bounding_box_ = {SCREEN_WIDTH - 70, 200, 20, 70}; 
+  double y_velocity_ = 0;
+  double velocity_ = 0.7;
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
+  SbTimer timer_;
 };
 
 
@@ -47,18 +47,16 @@ class Ball
 public:
   Ball();
   ~Ball();
-  void move(Uint32 deltaT);
+  void move(SDL_Rect paddleBox);
   void render();
   
 private:
-  int width_ = 25;
-  int height_ = 25;
-  int xPos_ = 50;
-  int yPos_ = 300;
-  double yVel_ = 0.5;
-  double xVel_ = 0.5;
+  SDL_Rect bounding_box_ = {50, 300, 25, 25};
+  double y_velocity_ = 0.5;
+  double x_velocity_ = 0.5;
   double velocity_ = 0.5;
   SbTexture* texture_ = nullptr;
+  SbTimer timer_;
   //  SDL_Color color = {210, 160, 10, 0};
 };
   
@@ -68,7 +66,7 @@ void close();
 
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
-TTF_Font *fpsFont = nullptr;
+TTF_Font *fps_font = nullptr;
 
 
 
@@ -78,8 +76,9 @@ TTF_Font *fpsFont = nullptr;
 Paddle::Paddle()
 {
   texture_ = new SbTexture();
-  texture_->createFromRectangle( width_, height_, color );
+  texture_->from_rectangle( bounding_box_.w, bounding_box_.h, color );
 }
+
 
 Paddle::~Paddle()
 {
@@ -88,41 +87,43 @@ Paddle::~Paddle()
 }
 
 
-
 void
-Paddle::handleEvent(const SDL_Event& event)
+Paddle::handle_event(const SDL_Event& event)
 {
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
-    case SDLK_UP: yVel_ -= velocity_; break;
-    case SDLK_DOWN: yVel_ += velocity_; break;
+    case SDLK_UP: y_velocity_ -= velocity_; break;
+    case SDLK_DOWN: y_velocity_ += velocity_; break;
     }
   }
   else if( event.type == SDL_KEYUP && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
-    case SDLK_UP: yVel_ += velocity_; break;
-    case SDLK_DOWN: yVel_ -= velocity_; break;
+    case SDLK_UP: y_velocity_ += velocity_; break;
+    case SDLK_DOWN: y_velocity_ -= velocity_; break;
     }
   }
 }
 
 
 void
-Paddle::move(Uint32 deltaT)
+Paddle::move()
 {
-  int velocity = yVel_* deltaT; 
-  yPos_ += velocity;
-  if( ( yPos_ < 0 ) || ( yPos_ + height_ > SCREEN_HEIGHT ) ) {
-    yPos_ -= velocity;
+  Uint32 deltaT = timer_.getTime();
+  int velocity = y_velocity_* deltaT; 
+  bounding_box_.y += velocity;
+  if( ( bounding_box_.y < 0 ) || ( bounding_box_.y + bounding_box_.h > SCREEN_HEIGHT ) ) {
+    bounding_box_.y -= velocity;
   }
+  timer_.start();
 }
     
 
 void
 Paddle::render()
 {
-  if ( texture_ ) texture_->render( xPos_, yPos_);
+  if ( texture_ ) texture_->render( bounding_box_.x, bounding_box_.y);
 }
+
 
 
 /*! Ball implementation
@@ -130,7 +131,7 @@ Paddle::render()
 Ball::Ball()
 {
   texture_ = new SbTexture();
-  texture_->createFromFile("resources/ball.png", width_, height_ );
+  texture_->from_file("resources/ball.png", bounding_box_.w, bounding_box_.h );
 }
 
 
@@ -143,18 +144,32 @@ Ball::~Ball()
 
 
 void
-Ball::move(Uint32 deltaT)
+Ball::move(SDL_Rect paddleBox)
 {
-  int y_velocity = yVel_ * deltaT;  
-  int x_velocity = xVel_ * deltaT;
-  yPos_ += y_velocity;
-  xPos_ += x_velocity;
-  if( ( yPos_ <= 0 ) || ( yPos_ + height_ >= SCREEN_HEIGHT ) ) {
-    yVel_ *= -1;
+  Uint32 deltaT = timer_.getTime();
+  int y_velocity = y_velocity_ * deltaT;  
+  int x_velocity = x_velocity_ * deltaT;
+  bounding_box_.y += y_velocity;
+  bounding_box_.x += x_velocity;
+  if ( bounding_box_.x + bounding_box_.w >= SCREEN_WIDTH ) {
+    bounding_box_.x = 0;
+    bounding_box_.y = SCREEN_HEIGHT / 2 ;
+    x_velocity = abs(x_velocity);
+    timer_.start();
+    return;
   }
-  if( ( xPos_ <= 0 ) || ( xPos_ + width_ >= SCREEN_WIDTH ) ) {
-    xVel_ *= -1;
+  if ( bounding_box_.x + bounding_box_.w >= paddleBox.x       &&
+       ( bounding_box_.y - bounding_box_.h/2) >= paddleBox.y  &&
+       ( bounding_box_.y + bounding_box_.h/2) <= paddleBox.y + paddleBox.h) {
+    x_velocity_ *= -1;
   }
+  else if ( ( bounding_box_.x <= 0 ) ) {
+    x_velocity_ *= -1;
+  }
+  if ( ( bounding_box_.y <= 0 ) || ( bounding_box_.y + bounding_box_.h >= SCREEN_HEIGHT ) ) {
+    y_velocity_ *= -1;
+  }
+  timer_.start();
 }
 
 
@@ -162,12 +177,8 @@ Ball::move(Uint32 deltaT)
 void
 Ball::render()
 {
-  if ( texture_ ) texture_->render( xPos_, yPos_);
+  if ( texture_ ) texture_->render( bounding_box_.x, bounding_box_.y);
 }
-
-
-
-
 
 
 
@@ -203,8 +214,8 @@ init()
     exit(1);
   }
  
-  fpsFont = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
-  if ( !fpsFont )
+  fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
+  if ( !fps_font )
     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 }
 
@@ -227,42 +238,40 @@ int main()
     init();
     Paddle paddle;
     Ball ball;
-    SbTexture *fpsTexture = new SbTexture();
-    SDL_Color fpsColor = {210, 160, 10, 0};
-    SbTimer fpsTimer, frameTimer;
+    SbTexture *fps_texture = new SbTexture();
+    SDL_Color fps_color = {210, 160, 10, 0};
+    SbTimer fps_timer;
     
     SDL_Event event;
     bool quit = false;
 
-    int frameCounter = 0;
-    fpsTimer.start();
-    frameTimer.start();
+    int fps_counter = 0;
+    fps_timer.start();
     
     while (!quit) {
       while( SDL_PollEvent( &event ) ) {
 	if (event.type == SDL_QUIT) quit = true;
 	else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE ) quit = true;
-	paddle.handleEvent(event);
+	paddle.handle_event(event);
       }
 
-      if ( frameCounter > 0 && frameCounter < INT_MAX ) {
-	double average = double(frameCounter)/ ( fpsTimer.getTime()/1000.0 ) ;
-	std::string fpsText = std::to_string(int(average)) + " fps";
-	fpsTexture->createFromText(fpsText, fpsFont, fpsColor);
+      if ( fps_counter > 0 && fps_counter < INT_MAX ) {
+	double average = double(fps_counter)/ ( fps_timer.getTime()/1000.0 ) ;
+	std::string fps_text = std::to_string(int(average)) + " fps";
+	fps_texture->from_text(fps_text, fps_font, fps_color);
       }
       else {
-	frameCounter = 0;
-	fpsTimer.start();
+	fps_counter = 0;
+	fps_timer.start();
       }
-      paddle.move( frameTimer.getTime() );
-      ball.move( frameTimer.getTime() );
-      frameTimer.start();
+      paddle.move();
+      ball.move( paddle.get_bounding_box() );
       SDL_RenderClear( gRenderer );
       paddle.render();
       ball.render();
-      fpsTexture->render(10,10);
+      fps_texture->render(10,10);
       SDL_RenderPresent( gRenderer );
-      ++frameCounter;  
+      ++fps_counter;  
     }
     close();
   }

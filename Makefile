@@ -5,7 +5,7 @@ SDL_INCLUDES = $(shell sdl2-config --cflags)
 SDL_LIBS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf
 
 CXX = g++
-CXXFLAGS += -O2 -Wall -std=c++11 -I.
+CXXFLAGS += -O2 -fpic -Wall -std=c++11 -I.
 DEBUG_FLAGS = -g -DDEBUG 
 
 OBJS = SbTexture.o SbTimer.o SbHalfPong.o
