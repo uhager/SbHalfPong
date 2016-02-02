@@ -159,8 +159,8 @@ Ball::move(SDL_Rect paddleBox)
     return;
   }
   if ( bounding_box_.x + bounding_box_.w >= paddleBox.x       &&
-       ( bounding_box_.y - bounding_box_.h/2) >= paddleBox.y  &&
-       ( bounding_box_.y + bounding_box_.h/2) <= paddleBox.y + paddleBox.h) {
+       ( bounding_box_.y + bounding_box_.h/2) >= paddleBox.y  &&
+       ( bounding_box_.y - bounding_box_.h/2) <= paddleBox.y + paddleBox.h) {
     x_velocity_ *= -1;
   }
   else if ( ( bounding_box_.x <= 0 ) ) {
