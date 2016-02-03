@@ -14,7 +14,6 @@
 #include "SbTexture.h"
 
 
-extern SDL_Renderer* gRenderer;
 
 /*! SbTexture implementation
  */
@@ -39,9 +38,9 @@ SbTexture::clear()
 
 
 SbTexture*
-SbTexture::from_file( const std::string& filename, int width, int height )
+SbTexture::from_file(SDL_Renderer* renderer, const std::string& filename, int width, int height )
 {
-  texture_ = IMG_LoadTexture(gRenderer, filename.c_str());
+  texture_ = IMG_LoadTexture(renderer, filename.c_str());
   
   if( texture_ == nullptr )
     throw std::runtime_error("Unable to create texture from " + filename + " " + SDL_GetError() );
@@ -67,23 +66,23 @@ SbTexture::from_file( const std::string& filename, int width, int height )
 
 
 SbTexture*
-SbTexture::from_rectangle( int width, int height, const SDL_Color& color )
+SbTexture::from_rectangle( SDL_Renderer* renderer, int width, int height, const SDL_Color& color )
 {
   clear();
-  texture_ = SDL_CreateTexture(gRenderer, 0, SDL_TEXTUREACCESS_TARGET, width, height);
+  texture_ = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, width, height);
   if (texture_ == nullptr) 
     throw std::runtime_error("Failed to create texture " + std::string( SDL_GetError() ));
   
-  SDL_RenderClear(gRenderer);
-  SDL_SetRenderTarget(gRenderer, texture_);
-  SDL_SetRenderDrawColor( gRenderer, color.r, color.g, color.b, color.a );
+  SDL_RenderClear(renderer);
+  SDL_SetRenderTarget(renderer, texture_);
+  SDL_SetRenderDrawColor( renderer, color.r, color.g, color.b, color.a );
   SDL_Rect sourceRect = {0,0,width,height};
-  int check = SDL_RenderFillRect( gRenderer, &sourceRect );
+  int check = SDL_RenderFillRect( renderer, &sourceRect );
   if ( check != 0 )
     throw std::runtime_error("Couldn't render rectangle: " + std::string( SDL_GetError() ));
-  SDL_SetRenderTarget(gRenderer, nullptr);
-  SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
-  SDL_RenderClear(gRenderer);
+  SDL_SetRenderTarget(renderer, nullptr);
+  SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
+  SDL_RenderClear(renderer);
 
   width_ = width;
   height_ = height;
@@ -93,14 +92,14 @@ SbTexture::from_rectangle( int width, int height, const SDL_Color& color )
 
 
 SbTexture*
-SbTexture::from_text( const std::string& text, TTF_Font* font, const SDL_Color& color )
+SbTexture::from_text( SDL_Renderer* renderer, const std::string& text, TTF_Font* font, const SDL_Color& color )
 {
   clear();
   SDL_Surface *surf = TTF_RenderText_Solid(font, text.c_str(), color);
   if (surf == nullptr)
     throw std::runtime_error("Failed to create surface from text: " + std::string( SDL_GetError() ));
 
-  texture_ = SDL_CreateTextureFromSurface(gRenderer, surf);
+  texture_ = SDL_CreateTextureFromSurface(renderer, surf);
   SDL_FreeSurface(surf);
   if (texture_ == nullptr) 
     throw std::runtime_error("Failed to create texture " + std::string( SDL_GetError() ));
@@ -111,9 +110,9 @@ SbTexture::from_text( const std::string& text, TTF_Font* font, const SDL_Color& 
 
 
 void
-SbTexture::render( int x, int y, SDL_Rect* sourceRect)
+SbTexture::render( SDL_Renderer* renderer, int x, int y, SDL_Rect* sourceRect)
 {
   SDL_Rect destRect = { x, y, width_, height_ };
-  SDL_RenderCopy( gRenderer, texture_, sourceRect, &destRect );
+  SDL_RenderCopy( renderer, texture_, sourceRect, &destRect );
 }
 

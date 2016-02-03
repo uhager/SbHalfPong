@@ -42,7 +42,6 @@ public:
 
 
 
-SDL_Renderer* gRenderer = nullptr;
 TTF_Font *fps_font = nullptr;
 
 
@@ -58,7 +57,7 @@ Paddle::Paddle()
   velocity_ = 0.7;
   SDL_Color color = {210, 160, 10, 0};
   texture_ = new SbTexture();
-  texture_->from_rectangle( bounding_box_.w, bounding_box_.h, color );
+  texture_->from_rectangle( window->renderer(), bounding_box_.w, bounding_box_.h, color );
 }
 
 
@@ -106,7 +105,7 @@ Ball::Ball()
   x_velocity_ = 0.5;
   velocity_ = 0.5;
   texture_ = new SbTexture();
-  texture_->from_file("resources/ball.png", bounding_box_.w, bounding_box_.h );
+  texture_->from_file(window->renderer(), "resources/ball.png", bounding_box_.w, bounding_box_.h );
 }
 
 
@@ -156,15 +155,14 @@ Ball::move(const SDL_Rect& paddleBox)
 
 
 
-/*! Global functions
- */
+SbWindow* SbObject::window;
 
 int main()
 {
   try {
     SbWindow window;
     window.initialize("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
-    gRenderer = window.renderer();
+    SbObject::window = &window ;
     Paddle paddle;
     Ball ball;
     SbTexture *fps_texture = new SbTexture();
@@ -191,7 +189,7 @@ int main()
       if ( fps_counter > 0 && fps_counter < INT_MAX ) {
 	double average = double(fps_counter)/ ( fps_timer.getTime()/1000.0 ) ;
 	std::string fps_text = std::to_string(int(average)) + " fps";
-	fps_texture->from_text(fps_text, fps_font, fps_color);
+	fps_texture->from_text( window.renderer(), fps_text, fps_font, fps_color);
       }
       else {
 	fps_counter = 0;
@@ -199,11 +197,11 @@ int main()
       }
       paddle.move();
       ball.move( paddle.get_bounding_box() );
-      SDL_RenderClear( gRenderer );
+      SDL_RenderClear( window.renderer() );
       paddle.render();
       ball.render();
-      fps_texture->render(10,10);
-      SDL_RenderPresent( gRenderer );
+      fps_texture->render( window.renderer(), 10,10);
+      SDL_RenderPresent( window.renderer() );
       ++fps_counter;  
     }
   }

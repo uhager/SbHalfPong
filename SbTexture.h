@@ -18,11 +18,11 @@ public:
   SbTexture() = default;
   ~SbTexture();
 
-  SbTexture* from_file( const std::string& filename, int width = 0, int height = 0);
-  SbTexture* from_rectangle( int width, int height, const SDL_Color& color );
-  SbTexture* from_text( const std::string& text, TTF_Font* font, const SDL_Color& color );
+  SbTexture* from_file( SDL_Renderer* renderer, const std::string& filename, int width = 0, int height = 0);
+  SbTexture* from_rectangle( SDL_Renderer* renderer, int width, int height, const SDL_Color& color );
+  SbTexture* from_text( SDL_Renderer* renderer, const std::string& text, TTF_Font* font, const SDL_Color& color );
   void clear();
-  void render( int x, int y, SDL_Rect* clip = nullptr);
+  void render( SDL_Renderer* renderer, int x, int y, SDL_Rect* clip = nullptr);
   int getWidth(){ return width_; }
   int getHeight(){ return height_;}
 

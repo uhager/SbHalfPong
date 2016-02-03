@@ -13,6 +13,7 @@
 #include "SbTimer.h"
 
 class SbTexture;
+class SbWindow;
 
 class SbObject
 {
@@ -20,6 +21,9 @@ public:
   SbObject() = default;
   SbObject(int x, int y, int width, int height);
   virtual ~SbObject();
+
+static SbWindow* window;
+
   virtual void handle_event(const SDL_Event& event);
   virtual void move( std::vector<SbObject*> objects_to_hit );
   void render();

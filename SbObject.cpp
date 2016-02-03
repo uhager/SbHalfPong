@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "SbTexture.h"
+#include "SbWindow.h"
 
 #include "SbObject.h"
 
@@ -50,7 +51,7 @@ SbObject::move( std::vector<SbObject*> objects_to_hit )
 void
 SbObject::render()
 {
-  if (texture_) texture_->render( bounding_box_.x, bounding_box_.y );
+  if (texture_) texture_->render( window->renderer(), bounding_box_.x, bounding_box_.y );
 }
 
 
