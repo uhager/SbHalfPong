@@ -103,6 +103,7 @@ Paddle::handle_event(const SDL_Event& event)
 }
 
 
+
 void
 Paddle::move()
 {

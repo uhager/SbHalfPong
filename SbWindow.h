@@ -3,6 +3,8 @@
   author: Ulrike Hager
  */
 
+#ifndef SBWINDOW_H
+#define SBWINDOW_H
 
 #include <string>
 
@@ -31,3 +33,6 @@ class SbWindow
   SDL_Color background_color_;  
 };
 
+
+
+#endif   //  SBWINDOW_H

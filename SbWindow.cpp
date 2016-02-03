@@ -31,7 +31,7 @@ SbWindow::initialize(std::string title, int width, int height)
     SDL_Quit();
     exit(1);
   }
-  window_ = SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN );
+  window_ = SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if( window_ == nullptr ){
     std::cerr << "Could not create window. SDL_Error: " <<  SDL_GetError()  << std::endl;
     exit(1);

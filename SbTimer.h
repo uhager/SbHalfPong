@@ -3,6 +3,9 @@
   author: Ulrike Hager
  */
 
+#ifndef SBTIMER_H
+#define SBTIMER_H
+
 
 #include <SDL2/SDL.h>
 
@@ -25,3 +28,4 @@ private:
 
 
 
+#endif  //  SBTIMER_H

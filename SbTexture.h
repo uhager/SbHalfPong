@@ -3,6 +3,9 @@
   author: Ulrike Hager
  */
 
+#ifndef SBTEXTURE_H
+#define SBTEXTURE_H
+
 #include <string>
 
 #include <SDL2/SDL.h>
@@ -29,3 +32,5 @@ private:
   int height_ = 0 ;
 };
 
+
+#endif // SBTEXTURE_H
