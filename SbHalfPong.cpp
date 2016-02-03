@@ -16,49 +16,28 @@ author: Ulrike Hager
 #include "SbTexture.h"
 #include "SbTimer.h"
 #include "SbWindow.h"
-
+#include "SbObject.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 
-class Paddle
+class Paddle : public SbObject
 {
 public:
   Paddle();
-  ~Paddle();
   void handle_event(const SDL_Event& event);
   void move();
-  void render();
-  SDL_Rect get_bounding_box() {return bounding_box_;}
-  
-private:
-  SDL_Rect bounding_box_ = {SCREEN_WIDTH - 70, 200, 20, 70}; 
-  double y_velocity_ = 0;
-  double velocity_ = 0.7;
-  SbTexture* texture_ = nullptr;
-  SDL_Color color = {210, 160, 10, 0};
-  SbTimer timer_;
 };
 
 
 
-class Ball
+class Ball : public SbObject
 {
 public:
   Ball();
-  ~Ball();
   void move(const SDL_Rect& paddleBox);
-  void render();
-  
-private:
-  SDL_Rect bounding_box_ = {50, 300, 25, 25};
-  double y_velocity_ = 0.5;
-  double x_velocity_ = 0.5;
-  double velocity_ = 0.5;
-  SbTexture* texture_ = nullptr;
-  SbTimer timer_;
-  //  SDL_Color color = {210, 160, 10, 0};
+  //  void handle_event(const SDL_Event& event);
 };
 
 
@@ -72,17 +51,16 @@ TTF_Font *fps_font = nullptr;
  */
 
 Paddle::Paddle()
+  : SbObject()
 {
+  bounding_box_ = {SCREEN_WIDTH - 70, 200, 20, 70}; 
+  y_velocity_ = 0;
+  velocity_ = 0.7;
+  SDL_Color color = {210, 160, 10, 0};
   texture_ = new SbTexture();
   texture_->from_rectangle( bounding_box_.w, bounding_box_.h, color );
 }
 
-
-Paddle::~Paddle()
-{
-  delete texture_;
-  texture_ = nullptr;
-}
 
 
 void
@@ -117,27 +95,18 @@ Paddle::move()
 }
     
 
-void
-Paddle::render()
-{
-  if ( texture_ ) texture_->render( bounding_box_.x, bounding_box_.y);
-}
-
 
 
 /*! Ball implementation
  */
 Ball::Ball()
 {
+  bounding_box_ = {50, 300, 25, 25};
+  y_velocity_ = 0.5;
+  x_velocity_ = 0.5;
+  velocity_ = 0.5;
   texture_ = new SbTexture();
   texture_->from_file("resources/ball.png", bounding_box_.w, bounding_box_.h );
-}
-
-
-Ball::~Ball()
-{
-  delete texture_;
-  texture_ = nullptr;
 }
 
 
@@ -184,13 +153,6 @@ Ball::move(const SDL_Rect& paddleBox)
   timer_.start();
 }
 
-
-
-void
-Ball::render()
-{
-  if ( texture_ ) texture_->render( bounding_box_.x, bounding_box_.y);
-}
 
 
 

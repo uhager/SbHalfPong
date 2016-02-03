@@ -5,6 +5,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -94,10 +95,6 @@ SbTexture::from_rectangle( int width, int height, const SDL_Color& color )
 SbTexture*
 SbTexture::from_text( const std::string& text, TTF_Font* font, const SDL_Color& color )
 {
-#ifdef DEBUG
-  std::cout << "[SbTexture::from_text]" << std::endl;
-#endif
-  
   clear();
   SDL_Surface *surf = TTF_RenderText_Solid(font, text.c_str(), color);
   if (surf == nullptr)
