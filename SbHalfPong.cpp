@@ -13,12 +13,13 @@ author: Ulrike Hager
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 
-#include <SbTexture.h>
-#include <SbTimer.h>
+#include "SbTexture.h"
+#include "SbTimer.h"
+#include "SbWindow.h"
 
 
 const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 560;
+const int SCREEN_HEIGHT = 600;
 
 
 class Paddle
@@ -59,12 +60,9 @@ private:
   SbTimer timer_;
   //  SDL_Color color = {210, 160, 10, 0};
 };
-  
 
-void init();
-void close();
 
-SDL_Window* gWindow = nullptr;
+
 SDL_Renderer* gRenderer = nullptr;
 TTF_Font *fps_font = nullptr;
 
@@ -197,64 +195,23 @@ Ball::render()
 
 /*! Global functions
  */
-void
-init()
-{
- if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-    std::cerr << "SDL could not initialize! SDL_Error: " <<  SDL_GetError() << std::endl;
-    exit(1);
-  }
-  if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG){
-    std::cout << "IMG_Init " << SDL_GetError();
-    SDL_Quit();
-    exit(1);
-  }
-  gWindow = SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
-  if( gWindow == nullptr ){
-    std::cerr << "Could not create window. SDL_Error: " <<  SDL_GetError()  << std::endl;
-    exit(1);
-  }
-  gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
-  if( gRenderer == nullptr ){
-    std::cerr << "Could not create renderer. SDL_Error: " <<  SDL_GetError() << std::endl;
-    exit(1);
-  }
-  SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-
-  if (TTF_Init() != 0){
-    std::cerr << "[SlTextureManager::SlTextureManager] Error in TTF_init: " << SDL_GetError() << std::endl;
-    SDL_Quit();
-    exit(1);
-  }
- 
-  fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
-  if ( !fps_font )
-    throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
-}
-
-
-void close()
-{
-  SDL_DestroyRenderer( gRenderer );
-  SDL_DestroyWindow( gWindow );
-  gWindow = nullptr;
-  gRenderer = nullptr;
-
-  IMG_Quit();
-  SDL_Quit();
-}
-
 
 int main()
 {
   try {
-    init();
+    SbWindow window;
+    window.initialize("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
+    gRenderer = window.renderer();
     Paddle paddle;
     Ball ball;
     SbTexture *fps_texture = new SbTexture();
     SDL_Color fps_color = {210, 160, 10, 0};
     SbTimer fps_timer;
-    
+
+    fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
+    if ( !fps_font )
+      throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
+
     SDL_Event event;
     bool quit = false;
 
@@ -286,7 +243,6 @@ int main()
       SDL_RenderPresent( gRenderer );
       ++fps_counter;  
     }
-    close();
   }
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;
