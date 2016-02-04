@@ -24,9 +24,7 @@ class SbWindow
   void initialize(std::string title, int width, int height);
   SDL_Renderer* renderer() {return renderer_;}
   int width() {return width_;}
-  std::array<double,2> scale() {return scale_;}
-  int scale_x() { return scale_[0]; }
-  int scale_y() { return scale_[1]; }
+  bool new_size() { return new_size_; }
   
  private:
   SDL_Renderer* renderer_ = nullptr;
@@ -34,7 +32,7 @@ class SbWindow
   int width_;
   int height_;
   SDL_Color background_color_;  
-  std::array<double,2> scale_{ {1.0,1.0} };
+  bool new_size_ = false;
 };
 
 

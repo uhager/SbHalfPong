@@ -20,20 +20,26 @@ class SbObject
 public:
   SbObject() = default;
   SbObject(int x, int y, int width, int height);
+  SbObject(double x, double y, double width, double height);
   virtual ~SbObject();
 
 static SbWindow* window;
 
   virtual void handle_event(const SDL_Event& event);
   virtual void move( std::vector<SbObject*> objects_to_hit );
+  virtual void move( );
   void render();
-  SDL_Rect get_bounding_box() {return bounding_box_;}
+  std::array<double,4> bounding_box() { return bounding_box_;};
+  SDL_Rect bounding_rect() {return bounding_rect_;}
+  void move_bounding_box();
   virtual void was_hit();
   
 protected:
-  SDL_Rect bounding_box_ = {70, 200, 20, 70}; 
-  double y_velocity_ = 0;
-  double x_velocity_ = 0;
+  SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;
+  //! location and size in terms of window width and height
+  std::array<double,4> bounding_box_ = { {0.5, 0.5, 0.05, 0.05} };
+  double velocity_y_ = 0;
+  double velocity_x_ = 0;
   double velocity_ = 0.7;
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};

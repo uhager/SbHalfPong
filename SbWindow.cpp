@@ -71,4 +71,14 @@ SbWindow::close()
 void
 SbWindow::handle_event(const SDL_Event& event)
 {
+  new_size_ = false;
+  if( event.type == SDL_WINDOWEVENT ) {
+    switch( event.window.event ) {
+    case SDL_WINDOWEVENT_SIZE_CHANGED:
+      width_ = event.window.data1;
+      height_ = event.window.data2;
+      new_size_ = true;
+      break;
+    }
+  } 
 }

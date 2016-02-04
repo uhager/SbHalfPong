@@ -50,14 +50,14 @@ TTF_Font *fps_font = nullptr;
  */
 
 Paddle::Paddle()
-  : SbObject()
+  : SbObject(SCREEN_WIDTH - 70, 200, 20, 70)
 {
-  bounding_box_ = {SCREEN_WIDTH - 70, 200, 20, 70}; 
-  y_velocity_ = 0;
+  //  bounding_rect_ = {}; 
+  velocity_y_ = 0;
   velocity_ = 0.7;
   SDL_Color color = {210, 160, 10, 0};
   texture_ = new SbTexture();
-  texture_->from_rectangle( window->renderer(), bounding_box_.w, bounding_box_.h, color );
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
 }
 
 
@@ -65,16 +65,17 @@ Paddle::Paddle()
 void
 Paddle::handle_event(const SDL_Event& event)
 {
+  SbObject::handle_event( event );
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
-    case SDLK_UP: y_velocity_ -= velocity_; break;
-    case SDLK_DOWN: y_velocity_ += velocity_; break;
+    case SDLK_UP: velocity_y_ -= velocity_; break;
+    case SDLK_DOWN: velocity_y_ += velocity_; break;
     }
   }
   else if( event.type == SDL_KEYUP && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
-    case SDLK_UP: y_velocity_ += velocity_; break;
-    case SDLK_DOWN: y_velocity_ -= velocity_; break;
+    case SDLK_UP: velocity_y_ += velocity_; break;
+    case SDLK_DOWN: velocity_y_ -= velocity_; break;
     }
   }
 }
@@ -85,11 +86,12 @@ void
 Paddle::move()
 {
   Uint32 deltaT = timer_.getTime();
-  int velocity = y_velocity_* deltaT; 
-  bounding_box_.y += velocity;
-  if( ( bounding_box_.y < 0 ) || ( bounding_box_.y + bounding_box_.h > SCREEN_HEIGHT ) ) {
-    bounding_box_.y -= velocity;
+  int velocity = velocity_y_* deltaT; 
+  bounding_rect_.y += velocity;
+  if( ( bounding_rect_.y < 0 ) || ( bounding_rect_.y + bounding_rect_.h > window->height() ) ) {
+    bounding_rect_.y -= velocity;
   }
+  move_bounding_box();
   timer_.start();
 }
     
@@ -99,13 +101,14 @@ Paddle::move()
 /*! Ball implementation
  */
 Ball::Ball()
+  : SbObject(50, 300, 25, 25)
 {
-  bounding_box_ = {50, 300, 25, 25};
-  y_velocity_ = 0.5;
-  x_velocity_ = 0.5;
+  //  bounding_box_ = {};
+  velocity_y_ = 0.5;
+  velocity_x_ = 0.5;
   velocity_ = 0.5;
   texture_ = new SbTexture();
-  texture_->from_file(window->renderer(), "resources/ball.png", bounding_box_.w, bounding_box_.h );
+  texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
 }
 
 
@@ -114,41 +117,42 @@ void
 Ball::move(const SDL_Rect& paddleBox)
 {
   Uint32 deltaT = timer_.getTime();
-  int y_velocity = y_velocity_ * deltaT;  
-  int x_velocity = x_velocity_ * deltaT;
-  bounding_box_.y += y_velocity;
-  bounding_box_.x += x_velocity;
-  if ( bounding_box_.x + bounding_box_.w >= SCREEN_WIDTH ) {
+  int y_velocity = velocity_y_ * deltaT;  
+  int x_velocity = velocity_x_ * deltaT;
+  bounding_rect_.y += y_velocity;
+  bounding_rect_.x += x_velocity;
+  if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
     // goal
-    bounding_box_.x = 0;
-    bounding_box_.y = SCREEN_HEIGHT / 2 ;
-    x_velocity = abs(x_velocity);
+    bounding_rect_.x = 0;
+    bounding_rect_.y = window->height() / 2 ;
+    move_bounding_box();
     timer_.start();
     return;
   }
   
   bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
-  if ( bounding_box_.x + bounding_box_.w/2 >= paddleBox.x &&
-       bounding_box_.x - bounding_box_.w/2 <= paddleBox.x + paddleBox.w )
+  if ( bounding_rect_.x + bounding_rect_.w/2 >= paddleBox.x &&
+       bounding_rect_.x - bounding_rect_.w/2 <= paddleBox.x + paddleBox.w )
     in_xrange = true;
       
-  if ( bounding_box_.y + bounding_box_.h/2 >= paddleBox.y  &&
-       bounding_box_.y - bounding_box_.h/2 <= paddleBox.y + paddleBox.h)
+  if ( bounding_rect_.y + bounding_rect_.h/2 >= paddleBox.y  &&
+       bounding_rect_.y - bounding_rect_.h/2 <= paddleBox.y + paddleBox.h)
      in_yrange = true;
 
-  if ( bounding_box_.x + bounding_box_.w >= paddleBox.x               &&
-       bounding_box_.x                   <= paddleBox.x + paddleBox.w )
+  if ( bounding_rect_.x + bounding_rect_.w >= paddleBox.x               &&
+       bounding_rect_.x                   <= paddleBox.x + paddleBox.w )
     x_hit = true;
 
-  if ( bounding_box_.y + bounding_box_.h >= paddleBox.y               &&
-       bounding_box_.y                   <= paddleBox.y + paddleBox.h )
+  if ( bounding_rect_.y + bounding_rect_.h >= paddleBox.y               &&
+       bounding_rect_.y                   <= paddleBox.y + paddleBox.h )
     y_hit = true;
 
-  if ( ( x_hit && in_yrange ) || bounding_box_.x <= 0  )
-    x_velocity_ *= -1;
-  if ( ( y_hit && in_xrange ) || bounding_box_.y <= 0 || ( bounding_box_.y + bounding_box_.h >= SCREEN_HEIGHT ) )
-    y_velocity_ *= -1;
+  if ( ( x_hit && in_yrange ) || bounding_rect_.x <= 0  )
+    velocity_x_ *= -1;
+  if ( ( y_hit && in_xrange ) || bounding_rect_.y <= 0 || ( bounding_rect_.y + bounding_rect_.h >= window->height() ) )
+    velocity_y_ *= -1;
  
+  move_bounding_box();
   timer_.start();
 }
 
@@ -183,7 +187,9 @@ int main()
       while( SDL_PollEvent( &event ) ) {
 	if (event.type == SDL_QUIT) quit = true;
 	else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE ) quit = true;
+	window.handle_event(event);
 	paddle.handle_event(event);
+	ball.handle_event( event );
       }
 
       if ( fps_counter > 0 && fps_counter < INT_MAX ) {
@@ -196,7 +202,7 @@ int main()
 	fps_timer.start();
       }
       paddle.move();
-      ball.move( paddle.get_bounding_box() );
+      ball.move( paddle.bounding_rect() );
       SDL_RenderClear( window.renderer() );
       paddle.render();
       ball.render();
