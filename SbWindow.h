@@ -33,6 +33,7 @@ class SbWindow
   int height_;
   SDL_Color background_color_;  
   bool new_size_ = false;
+  bool is_fullscreen = false;
 };
 
 

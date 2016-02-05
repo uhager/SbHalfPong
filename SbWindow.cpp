@@ -80,5 +80,18 @@ SbWindow::handle_event(const SDL_Event& event)
       new_size_ = true;
       break;
     }
-  } 
+  }
+  else if( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) { 
+    if ( is_fullscreen ) {
+      SDL_SetWindowFullscreen( window_, SDL_FALSE );
+      SDL_GetWindowSize( window_, &width_, &height_ );
+      is_fullscreen = false;
+    }
+    else {
+      SDL_SetWindowFullscreen( window_, SDL_WINDOW_FULLSCREEN_DESKTOP );
+      SDL_GetWindowSize( window_, &width_, &height_ );
+      is_fullscreen = true;
+    }
+    new_size_ = true;
+  }
 }
