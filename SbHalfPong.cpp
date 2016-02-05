@@ -8,6 +8,8 @@ author: Ulrike Hager
 #include <stdexcept>
 #include <climits>
 #include <cmath>
+#include <random>
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -32,6 +34,18 @@ public:
 
 
 
+class Spark : public SbObject
+{
+public:
+  Spark(double x, double y, double width, double height);
+  ~Spark();
+  void set_texture(SbTexture* tex) {texture_ = tex;}
+  
+private:
+  int lifetime = 15; // milliseconds
+};
+
+  
 class Ball : public SbObject
 {
 public:
@@ -41,13 +55,20 @@ public:
     \retval 0 else
    */
   int move(const SDL_Rect& paddleBox);
+  void render();
   /*! Reset after goal.
    */
   void reset();
   static Uint32 resetball(Uint32 interval, void *param );
 
 private:
-  int goal = 0;
+  int goal_ = 0;
+  std::vector<Spark> sparks_;
+  std::default_random_engine generator_;
+  std::uniform_int_distribution<int> distr_number { 15, 30 };
+  std::normal_distribution<double> distr_position { 0.0, 0.01 };
+  std::normal_distribution<double> distr_size { 0.003, 0.002 };
+  void create_sparks();
 };
 
 
@@ -108,6 +129,18 @@ Paddle::move()
     
 
 
+Spark::Spark(double x, double y, double width, double height)
+  : SbObject(x,y,width,height)
+{
+}
+
+
+
+Spark::~Spark()
+{
+  texture_ = nullptr;
+}
+
 
 /*! Ball implementation
  */
@@ -124,22 +157,40 @@ Ball::Ball()
 
 
 
+void
+Ball::create_sparks()
+{
+  if (! sparks_.empty() ) sparks_.clear();
+  int n_sparks = distr_number(generator_);
+  for ( int i = 0 ; i < n_sparks ; ++i ) {
+    double x = distr_position(generator_);
+    double y = distr_position(generator_);
+    double d = distr_size(generator_);
+    x += ( bounding_box_[0] + bounding_box_[2]/2);
+    y += ( bounding_box_[1] + bounding_box_[3]/2);
+    Spark toAdd(x, y, d, d);
+    toAdd.set_texture( texture_ );
+    sparks_.push_back(toAdd);
+  }
+}
+
+
 
 int
 Ball::move(const SDL_Rect& paddleBox)
 {
-  if ( goal ) return 0;
+  if ( goal_ ) return 0;
   Uint32 deltaT = timer_.getTime();
   int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
   int y_velocity = ( window->height() / velocity_y_ ) * deltaT;  
   bounding_rect_.y += y_velocity;
   bounding_rect_.x += x_velocity;
   if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
-    goal = 1;
+    goal_ = 1;
     bounding_rect_.x = 0;
     bounding_rect_.y = window->height() / 2 ;
     move_bounding_box();
-    return goal;
+    return goal_;
   }
   
   bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
@@ -159,21 +210,35 @@ Ball::move(const SDL_Rect& paddleBox)
        bounding_rect_.y                   <= paddleBox.y + paddleBox.h )
     y_hit = true;
 
-  if ( ( x_hit && in_yrange ) || bounding_rect_.x <= 0  )
+  if ( ( x_hit && in_yrange ) || bounding_rect_.x <= 0  ) {
     velocity_x_ *= -1;
+    if ( x_hit && in_yrange )
+      create_sparks();
+  }
   if ( ( y_hit && in_xrange ) || bounding_rect_.y <= 0 || ( bounding_rect_.y + bounding_rect_.h >= window->height() ) )
     velocity_y_ *= -1;
  
   move_bounding_box();
   timer_.start();
-  return goal;
+  return goal_;
+}
+
+
+
+void
+Ball::render()
+{
+  SbObject::render();
+  if ( !sparks_.empty() )
+    std::for_each( sparks_.begin(), sparks_.end(),
+		   [](Spark& spark) -> void { spark.render(); } ); 
 }
 
 
 void
 Ball::reset()
 {
-  goal = 0;
+  goal_ = 0;
   timer_.start();
 }
 
