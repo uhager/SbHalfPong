@@ -10,6 +10,7 @@ author: Ulrike Hager
 #include <cmath>
 #include <random>
 #include <algorithm>
+#include <functional>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -24,6 +25,10 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 
+class Ball;
+class Spark;
+class Paddle;
+
 class Paddle : public SbObject
 {
 public:
@@ -34,18 +39,6 @@ public:
 
 
 
-class Spark : public SbObject
-{
-public:
-  Spark(double x, double y, double width, double height);
-  ~Spark();
-  void set_texture(SbTexture* tex) {texture_ = tex;}
-  
-private:
-  int lifetime = 15; // milliseconds
-};
-
-  
 class Ball : public SbObject
 {
 public:
@@ -60,7 +53,9 @@ public:
    */
   void reset();
   static Uint32 resetball(Uint32 interval, void *param );
+  Uint32 remove_spark(Uint32 interval, void *param, int index );
 
+  
 private:
   int goal_ = 0;
   std::vector<Spark> sparks_;
@@ -68,13 +63,32 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
+  std::normal_distribution<double> distr_lifetime { 120, 50 };
+
   void create_sparks();
+  void delete_spark(int index);
 };
 
 
 
-TTF_Font *fps_font = nullptr;
+class Spark : public SbObject
+{
+  friend class Ball;
+public:
+  Spark(double x, double y, double width, double height);
+  ~Spark();
 
+  static Uint32 remove_texture(Uint32 interval, void* param);
+
+  void set_texture(SbTexture* tex) {texture_ = tex;}
+  int index() { return index_;}
+  
+private:
+  SDL_TimerID spark_timer_;
+  int index_;
+};
+
+  
 
 
 /*! Paddle implementation
@@ -142,6 +156,27 @@ Spark::~Spark()
 }
 
 
+
+Uint32
+Ball::remove_spark(Uint32 interval, void *param, int index )
+{
+  ((Ball*)param)->delete_spark(index);
+  return(0);
+}
+
+
+
+
+void
+Ball::delete_spark(int index)
+{
+  std::remove_if( sparks_.begin(), sparks_.end(),
+		  [index](Spark& spark) -> bool { return spark.index() == index;} );
+  // ((Spark*)param)->set_texture( nullptr );
+}
+
+
+
 /*! Ball implementation
  */
 Ball::Ball()
@@ -170,6 +205,10 @@ Ball::create_sparks()
     y += ( bounding_box_[1] + bounding_box_[3]/2);
     Spark toAdd(x, y, d, d);
     toAdd.set_texture( texture_ );
+    toAdd.index_ = i;
+    int lifetime = int(distr_lifetime(generator_));
+    auto funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, index );
+    toAdd.spark_timer_ = SDL_AddTimer(lifetime, funct, &toAdd);
     sparks_.push_back(toAdd);
   }
 }
@@ -247,18 +286,6 @@ Ball::reset()
 Uint32
 Ball::resetball(Uint32 interval, void *param )
 {
-  // SDL_Event event;
-  // SDL_UserEvent userevent;
-  
-  // userevent.type = SDL_USEREVENT;
-  // userevent.code = 0;
-  // userevent.data1 = &reset();
-  // userevent.data2 = nullptr;
-
-  // event.type = SDL_USEREVENT;
-  // event.user = userevent;
-  
-  // SDL_PushEvent(&event);
   ((Ball*)param)->reset();
   return(0);
 }
@@ -266,6 +293,7 @@ Ball::resetball(Uint32 interval, void *param )
 
 
 SbWindow* SbObject::window;
+TTF_Font *fps_font = nullptr;
 
 int main()
 {
