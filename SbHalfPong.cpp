@@ -60,7 +60,7 @@ TTF_Font *fps_font = nullptr;
  */
 
 Paddle::Paddle()
-  : SbObject(SCREEN_WIDTH - 70, 200, 20, 140)
+  : SbObject(SCREEN_WIDTH - 70, 200, 20, 80)
 {
   //  bounding_rect_ = {}; 
   velocity_y_ = 0;
@@ -246,7 +246,7 @@ int main()
       paddle.move();
       int goal = ball.move( paddle.bounding_rect() );
       if ( goal ) {
-	reset_timer = SDL_AddTimer(1000, ball.resetball, &ball);
+	reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
       }
       SDL_RenderClear( window.renderer() );
       paddle.render();
