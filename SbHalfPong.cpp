@@ -27,7 +27,7 @@ class Paddle : public SbObject
 public:
   Paddle();
   void handle_event(const SDL_Event& event);
-  void move();
+  int move();
 };
 
 
@@ -36,8 +36,18 @@ class Ball : public SbObject
 {
 public:
   Ball();
-  void move(const SDL_Rect& paddleBox);
   //  void handle_event(const SDL_Event& event);
+  /*! \retval 1 if ball in goal
+    \retval 0 else
+   */
+  int move(const SDL_Rect& paddleBox);
+  /*! Reset after goal.
+   */
+  void reset();
+  static Uint32 resetball(Uint32 interval, void *param );
+
+private:
+  int goal = 0;
 };
 
 
@@ -50,7 +60,7 @@ TTF_Font *fps_font = nullptr;
  */
 
 Paddle::Paddle()
-  : SbObject(SCREEN_WIDTH - 70, 200, 20, 70)
+  : SbObject(SCREEN_WIDTH - 70, 200, 20, 140)
 {
   //  bounding_rect_ = {}; 
   velocity_y_ = 0;
@@ -82,7 +92,7 @@ Paddle::handle_event(const SDL_Event& event)
 
 
 
-void
+int
 Paddle::move()
 {
   Uint32 deltaT = timer_.getTime();
@@ -93,6 +103,7 @@ Paddle::move()
   }
   move_bounding_box();
   timer_.start();
+  return 0;
 }
     
 
@@ -113,21 +124,22 @@ Ball::Ball()
 
 
 
-void
+
+int
 Ball::move(const SDL_Rect& paddleBox)
 {
+  if ( goal ) return 0;
   Uint32 deltaT = timer_.getTime();
   int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
   int y_velocity = ( window->height() / velocity_y_ ) * deltaT;  
   bounding_rect_.y += y_velocity;
   bounding_rect_.x += x_velocity;
   if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
-    // goal
+    goal = 1;
     bounding_rect_.x = 0;
     bounding_rect_.y = window->height() / 2 ;
     move_bounding_box();
-    timer_.start();
-    return;
+    return goal;
   }
   
   bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
@@ -154,8 +166,37 @@ Ball::move(const SDL_Rect& paddleBox)
  
   move_bounding_box();
   timer_.start();
+  return goal;
 }
 
+
+void
+Ball::reset()
+{
+  goal = 0;
+  timer_.start();
+}
+
+
+
+Uint32
+Ball::resetball(Uint32 interval, void *param )
+{
+  // SDL_Event event;
+  // SDL_UserEvent userevent;
+  
+  // userevent.type = SDL_USEREVENT;
+  // userevent.code = 0;
+  // userevent.data1 = &reset();
+  // userevent.data2 = nullptr;
+
+  // event.type = SDL_USEREVENT;
+  // event.user = userevent;
+  
+  // SDL_PushEvent(&event);
+  ((Ball*)param)->reset();
+  return(0);
+}
 
 
 
@@ -172,11 +213,12 @@ int main()
     SbTexture *fps_texture = new SbTexture();
     SDL_Color fps_color = {210, 160, 10, 0};
     SbTimer fps_timer;
-
+    
     fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
+    SDL_TimerID reset_timer;
     SDL_Event event;
     bool quit = false;
 
@@ -202,7 +244,10 @@ int main()
 	fps_timer.start();
       }
       paddle.move();
-      ball.move( paddle.bounding_rect() );
+      int goal = ball.move( paddle.bounding_rect() );
+      if ( goal ) {
+	reset_timer = SDL_AddTimer(1000, ball.resetball, &ball);
+      }
       SDL_RenderClear( window.renderer() );
       paddle.render();
       ball.render();

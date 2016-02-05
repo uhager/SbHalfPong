@@ -64,22 +64,24 @@ SbObject::handle_event(const SDL_Event& event)
 
 
 
-void
+int
 SbObject::move( std::vector<SbObject*> objects_to_hit )
 {
 #ifdef DEBUG
   std::cout << "[SbObject::move]" << std::endl;
 #endif
+  return 0;
 }
 
 
 
-void
+int
 SbObject::move( )
 {
 #ifdef DEBUG
   std::cout << "[SbObject::move]" << std::endl;
 #endif
+  return 0;
 }
 
 

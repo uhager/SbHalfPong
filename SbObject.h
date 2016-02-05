@@ -26,8 +26,8 @@ public:
 static SbWindow* window;
 
   virtual void handle_event(const SDL_Event& event);
-  virtual void move( std::vector<SbObject*> objects_to_hit );
-  virtual void move( );
+  virtual int move( std::vector<SbObject*> objects_to_hit );
+  virtual int move( );
   void render();
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
