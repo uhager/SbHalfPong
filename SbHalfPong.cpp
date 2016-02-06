@@ -63,7 +63,7 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
-  std::normal_distribution<double> distr_lifetime { 200, 150 };
+  std::normal_distribution<float> distr_lifetime { 200, 150 };
 
   void create_sparks();
   void delete_spark(int index);
@@ -85,8 +85,8 @@ public:
   bool is_dead() {return is_dead_;}  
 
 private:
-  //  SDL_TimerID spark_timer_;
-  int index_;
+  SDL_TimerID spark_timer_;
+  int index_ = 0;
   bool is_dead_ = false;
 };
 
@@ -155,6 +155,7 @@ Spark::Spark(double x, double y, double width, double height)
 Spark::~Spark()
 {
   texture_ = nullptr;
+  SDL_RemoveTimer(spark_timer_);
 }
 
 
@@ -162,7 +163,13 @@ Spark::~Spark()
 Uint32 
 Spark::expire(Uint32 interval, void* param)
 {
+#ifdef DEBUG
+    std::cout << "[Spark::expire] interval " << interval << std::endl;
+#endif // DEBUG
   Spark* spark = ((Spark*)param);
+#ifdef DEBUG
+    std::cout << "[Spark::expire] index " << spark->index_ << std::endl;
+#endif // DEBUG
   if (spark) spark->is_dead_ = true;
   return(0);
 }
@@ -220,9 +227,12 @@ Ball::create_sparks()
     toAdd.index_ = i;
     Uint32 lifetime = Uint32(distr_lifetime(generator_));
     if ( lifetime < 0 ) lifetime *= -1;
+#ifdef DEBUG
+    std::cout << "[Ball::create_sparks] index " << i << " - lifetime " << lifetime << std::endl;
+#endif // DEBUG
     //    std::function<Uint32(Uint32,void*)> funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, toAdd.index_ );
     sparks_.push_back(toAdd);
-    SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
+    sparks_.back().spark_timer_ = SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
   }
 }
 
