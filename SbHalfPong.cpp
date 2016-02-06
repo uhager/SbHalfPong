@@ -63,7 +63,7 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
-  std::normal_distribution<double> distr_lifetime { 120, 50 };
+  std::normal_distribution<double> distr_lifetime { 200, 150 };
 
   void create_sparks();
   void delete_spark(int index);
@@ -78,14 +78,16 @@ public:
   Spark(double x, double y, double width, double height);
   ~Spark();
 
-  static Uint32 remove_texture(Uint32 interval, void* param);
+  static Uint32 expire(Uint32 interval, void* param);
 
   void set_texture(SbTexture* tex) {texture_ = tex;}
   int index() { return index_;}
-  
+  bool is_dead() {return is_dead_;}  
+
 private:
-  SDL_TimerID spark_timer_;
+  //  SDL_TimerID spark_timer_;
   int index_;
+  bool is_dead_ = false;
 };
 
   
@@ -157,6 +159,16 @@ Spark::~Spark()
 
 
 
+Uint32 
+Spark::expire(Uint32 interval, void* param)
+{
+  Spark* spark = ((Spark*)param);
+  if (spark) spark->is_dead_ = true;
+  return(0);
+}
+
+
+
 Uint32
 Ball::remove_spark(Uint32 interval, void *param, int index )
 {
@@ -206,10 +218,11 @@ Ball::create_sparks()
     Spark toAdd(x, y, d, d);
     toAdd.set_texture( texture_ );
     toAdd.index_ = i;
-    int lifetime = int(distr_lifetime(generator_));
-    auto funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, index );
-    toAdd.spark_timer_ = SDL_AddTimer(lifetime, funct, &toAdd);
+    Uint32 lifetime = Uint32(distr_lifetime(generator_));
+    if ( lifetime < 0 ) lifetime *= -1;
+    //    std::function<Uint32(Uint32,void*)> funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, toAdd.index_ );
     sparks_.push_back(toAdd);
+    SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
   }
 }
 
@@ -270,7 +283,7 @@ Ball::render()
   SbObject::render();
   if ( !sparks_.empty() )
     std::for_each( sparks_.begin(), sparks_.end(),
-		   [](Spark& spark) -> void { spark.render(); } ); 
+		   [](Spark& spark) -> void { if ( !spark.is_dead() ) spark.render(); } ); 
 }
 
 
