@@ -32,6 +32,8 @@ static SbWindow* window;
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
   void move_bounding_box();
+  void start_timer() {timer_.start();}
+  Uint32 time() {return timer_.get_time();}
   virtual void was_hit();
   
 protected:
