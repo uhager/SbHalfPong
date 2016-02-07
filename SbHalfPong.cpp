@@ -63,7 +63,7 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
-  std::normal_distribution<float> distr_lifetime { 200, 150 };
+  std::uniform_int_distribution<int> distr_lifetime { 150, 350 };
 
   void create_sparks();
   void delete_spark(int index);
