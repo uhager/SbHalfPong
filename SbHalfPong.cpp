@@ -63,7 +63,7 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
-  std::uniform_int_distribution<int> distr_lifetime { 150, 350 };
+  std::uniform_int_distribution<int> distr_lifetime { 100, 400 };
 
   void create_sparks();
   void delete_spark(int index);
@@ -83,11 +83,13 @@ public:
   void set_texture(SbTexture* tex) {texture_ = tex;}
   int index() { return index_;}
   bool is_dead() {return is_dead_;}  
+  Uint32 lifetime() { return lifetime_;}
 
 private:
-  SDL_TimerID spark_timer_;
+  //  SDL_TimerID spark_timer_;
   int index_ = 0;
   bool is_dead_ = false;
+  Uint32 lifetime_ = 100;
 };
 
   
@@ -132,7 +134,7 @@ Paddle::handle_event(const SDL_Event& event)
 int
 Paddle::move()
 {
-  Uint32 deltaT = timer_.getTime();
+  Uint32 deltaT = timer_.get_time();
   int velocity = ( window->height() / velocity_y_ )* deltaT; 
   bounding_rect_.y += velocity;
   if( ( bounding_rect_.y < 0 ) || ( bounding_rect_.y + bounding_rect_.h > window->height() ) ) {
@@ -154,8 +156,11 @@ Spark::Spark(double x, double y, double width, double height)
 
 Spark::~Spark()
 {
+#ifdef DEBUG
+  std::cout << "[Spark::~Spark] index " << index_ << " - lifetime " << lifetime_ << std::endl;  
+#endif  // DEBUG
   texture_ = nullptr;
-  SDL_RemoveTimer(spark_timer_);
+  //  SDL_RemoveTimer(spark_timer_);
 }
 
 
@@ -164,7 +169,7 @@ Uint32
 Spark::expire(Uint32 interval, void* param)
 {
 #ifdef DEBUG
-    std::cout << "[Spark::expire] interval " << interval << std::endl;
+    std::cout << "[Spark::expire] interval " << interval << std::flush;
 #endif // DEBUG
   Spark* spark = ((Spark*)param);
 #ifdef DEBUG
@@ -214,7 +219,12 @@ Ball::Ball()
 void
 Ball::create_sparks()
 {
-  if (! sparks_.empty() ) sparks_.clear();
+#ifdef DEBUG
+    std::cout << "[Ball::create_sparks]" << std::endl;
+#endif // DEBUG
+  if (! sparks_.empty() ) {
+    sparks_.clear();
+  }
   int n_sparks = distr_number(generator_);
   for ( int i = 0 ; i < n_sparks ; ++i ) {
     double x = distr_position(generator_);
@@ -223,16 +233,16 @@ Ball::create_sparks()
     x += ( bounding_box_[0] + bounding_box_[2]/2);
     y += ( bounding_box_[1] + bounding_box_[3]/2);
     Spark toAdd(x, y, d, d);
-    toAdd.set_texture( texture_ );
     toAdd.index_ = i;
-    Uint32 lifetime = Uint32(distr_lifetime(generator_));
-    if ( lifetime < 0 ) lifetime *= -1;
+    toAdd.set_texture( texture_ );
+    toAdd.lifetime_ = Uint32(distr_lifetime(generator_));
+    toAdd.timer_.start();
+    sparks_.push_back(toAdd);
 #ifdef DEBUG
-    std::cout << "[Ball::create_sparks] index " << i << " - lifetime " << lifetime << std::endl;
+    std::cout << "[Ball::create_sparks] index " << i << " - lifetime " << (sparks_.back()).lifetime() << std::endl;
 #endif // DEBUG
     //    std::function<Uint32(Uint32,void*)> funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, toAdd.index_ );
-    sparks_.push_back(toAdd);
-    sparks_.back().spark_timer_ = SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
+    //   sparks_.back().spark_timer_ = SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
   }
 }
 
@@ -242,7 +252,7 @@ int
 Ball::move(const SDL_Rect& paddleBox)
 {
   if ( goal_ ) return 0;
-  Uint32 deltaT = timer_.getTime();
+  Uint32 deltaT = timer_.get_time();
   int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
   int y_velocity = ( window->height() / velocity_y_ ) * deltaT;  
   bounding_rect_.y += y_velocity;
@@ -291,9 +301,20 @@ void
 Ball::render()
 {
   SbObject::render();
-  if ( !sparks_.empty() )
-    std::for_each( sparks_.begin(), sparks_.end(),
-		   [](Spark& spark) -> void { if ( !spark.is_dead() ) spark.render(); } ); 
+  if ( sparks_.empty() ) 
+    return;
+  // std::for_each( sparks_.begin(), sparks_.end(),
+  // 		   [](Spark& spark) -> void { if ( !spark.is_dead() ) spark.render(); } ); 
+  auto iter = sparks_.begin();
+  while ( iter != sparks_.end() ) {
+    if ( iter->time() > iter->lifetime() ){
+      iter = sparks_.erase(iter);
+    }
+    else {
+      iter->render();
+      ++iter;
+    }
+  }
 }
 
 
@@ -334,7 +355,7 @@ int main()
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-    SDL_TimerID reset_timer;
+    SDL_TimerID reset_timer = 0;
     SDL_Event event;
     bool quit = false;
 
@@ -351,7 +372,7 @@ int main()
       }
 
       if ( fps_counter > 0 && fps_counter < INT_MAX ) {
-	double average = double(fps_counter)/ ( fps_timer.getTime()/1000.0 ) ;
+	double average = double(fps_counter)/ ( fps_timer.get_time()/1000.0 ) ;
 	std::string fps_text = std::to_string(int(average)) + " fps";
 	fps_texture->from_text( window.renderer(), fps_text, fps_font, fps_color);
       }

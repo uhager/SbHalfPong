@@ -18,7 +18,7 @@ public:
   void stop();
   /*! All times in ms
    */
-  Uint32 getTime();
+  Uint32 get_time();
   bool started(){ return started_ ;}
 
 private:

@@ -26,7 +26,7 @@ SbTimer::stop()
 
 
 Uint32
-SbTimer::getTime()
+SbTimer::get_time()
 {
   Uint32 time = 0;
   if ( started_ )
