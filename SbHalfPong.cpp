@@ -63,7 +63,7 @@ private:
   std::uniform_int_distribution<int> distr_number { 15, 30 };
   std::normal_distribution<double> distr_position { 0.0, 0.01 };
   std::normal_distribution<double> distr_size { 0.003, 0.002 };
-  std::uniform_int_distribution<int> distr_lifetime { 100, 350 };
+  std::uniform_int_distribution<int> distr_lifetime { 100, 400 };
 
   void create_sparks();
   void delete_spark(int index);
@@ -223,28 +223,17 @@ Ball::create_sparks()
     std::cout << "[Ball::create_sparks]" << std::endl;
 #endif // DEBUG
   if (! sparks_.empty() ) {
-#ifdef DEBUG
-    std::cout << "[Ball::create_sparks] clearing out." << std::endl;
-#endif // DEBUG
     sparks_.clear();
   }
   int n_sparks = distr_number(generator_);
   for ( int i = 0 ; i < n_sparks ; ++i ) {
-#ifdef DEBUG
-    std::cout << "[Ball::create_sparks] index " << i << std::endl;
-#endif // DEBUG
     double x = distr_position(generator_);
     double y = distr_position(generator_);
     double d = distr_size(generator_);
-    std::cout << "test 3" << std::endl;
     x += ( bounding_box_[0] + bounding_box_[2]/2);
     y += ( bounding_box_[1] + bounding_box_[3]/2);
     Spark toAdd(x, y, d, d);
-    std::cout << "test 4" << std::endl;
     toAdd.index_ = i;
-#ifdef DEBUG
-    std::cout << "[Ball::create_sparks] back index " << sparks_.back().index_ << " - toAdd.index " << toAdd.index_ << std::endl;
-#endif // DEBUG
     toAdd.set_texture( texture_ );
     toAdd.lifetime_ = Uint32(distr_lifetime(generator_));
     toAdd.timer_.start();
