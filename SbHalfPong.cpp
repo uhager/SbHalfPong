@@ -92,12 +92,26 @@ private:
   Uint32 lifetime_ = 100;
 };
 
+
   
+class Message : public SbObject
+{
+public:
+  Message(double x, double y, double width, double height);
+  ~Message();
+
+  void set_font(TTF_Font* font){ font_ = font;}
+  void set_text(std::string text);
+
+private:
+  TTF_Font* font_ = nullptr;
+  SDL_Color color_{210, 160, 10, 0};
+};
+
 
 
 /*! Paddle implementation
  */
-
 Paddle::Paddle()
   : SbObject(SCREEN_WIDTH - 70, 200, 20, 80)
 {
@@ -336,6 +350,33 @@ Ball::resetball(Uint32 interval, void *param )
 
 
 
+Message::Message(double x, double y, double width, double height)
+  : SbObject(x,y,width,height)
+{
+}
+
+
+
+void
+Message::set_text(std::string message)
+{
+  if ( !font_)
+    throw std::runtime_error( "[Message::set_text] no font. Call set_font before setting the text." );
+
+  texture_->from_text( window->renderer(), message, font_, color_);
+}
+
+
+
+Message::~Message()
+{
+  font_ = nullptr;
+}
+
+
+
+
+
 SbWindow* SbObject::window;
 TTF_Font *fps_font = nullptr;
 
@@ -347,19 +388,28 @@ int main()
     SbObject::window = &window ;
     Paddle paddle;
     Ball ball;
-    SbTexture *fps_texture = new SbTexture();
-    SDL_Color fps_color = {210, 160, 10, 0};
-    SbTimer fps_timer;
     
-    fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 18 );
+    fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 20 );
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
+    Message fps_counter(0,0,0.07,0.035);
+    Message goals(0.2,0.003,0.07,0.09);
+    fps_counter.set_font(fps_font);
+    goals.set_font(fps_font);
+    
+    // SbTexture *fps_texture = new SbTexture();
+    // SDL_Color fps_color = {210, 160, 10, 0};
+    SbTimer fps_timer;
+
+    int goal_counter = 3;
+    goals.set_text( std::to_string(goal_counter) );
+    
     SDL_TimerID reset_timer = 0;
     SDL_Event event;
     bool quit = false;
 
-    int fps_counter = 0;
+    int frame_counter = 0;
     fps_timer.start();
     
     while (!quit) {
@@ -369,28 +419,34 @@ int main()
 	window.handle_event(event);
 	paddle.handle_event(event);
 	ball.handle_event( event );
+	fps_counter.handle_event( event );
       }
 
-      if ( fps_counter > 0 && fps_counter < INT_MAX ) {
-	double average = double(fps_counter)/ ( fps_timer.get_time()/1000.0 ) ;
-	std::string fps_text = std::to_string(int(average)) + " fps";
-	fps_texture->from_text( window.renderer(), fps_text, fps_font, fps_color);
-      }
-      else {
-	fps_counter = 0;
-	fps_timer.start();
-      }
       paddle.move();
       int goal = ball.move( paddle.bounding_rect() );
       if ( goal ) {
 	reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
+	--goal_counter;
+	goals.set_text( std::to_string(goal_counter) );
       }
+
+      if ( frame_counter > 0 && frame_counter < 1000 /*INT_MAX*/ ) {
+	double average = double(frame_counter)/ ( fps_timer.get_time()/1000.0 ) ;
+	std::string fps_text = std::to_string(int(average)) + " fps";
+	fps_counter.set_text( fps_text ); 
+      }
+      else {
+	frame_counter = 0;
+	fps_timer.start();
+      }
+
       SDL_RenderClear( window.renderer() );
       paddle.render();
       ball.render();
-      fps_texture->render( window.renderer(), 10,10);
+      fps_counter.render();
+      goals.render();
       SDL_RenderPresent( window.renderer() );
-      ++fps_counter;  
+      ++frame_counter;  
     }
   }
   catch (const std::exception& expt) {

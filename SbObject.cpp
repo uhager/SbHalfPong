@@ -15,6 +15,7 @@
 
 SbObject::SbObject(int x, int y, int width, int height)
 {
+  texture_ = new SbTexture();
   bounding_rect_ = {x,y,width, height};
   bounding_box_[0] = double(bounding_rect_.x)/window->width();
   bounding_box_[1] = double(bounding_rect_.y)/window->height();
@@ -26,6 +27,7 @@ SbObject::SbObject(int x, int y, int width, int height)
 
 SbObject::SbObject(double x, double y, double width, double height)
 {
+  texture_ = new SbTexture();
   bounding_box_ = {x,y,width, height};
   bounding_rect_.x = static_cast<int>(x * window->width() );
   bounding_rect_.y = static_cast<int>(y * window->height() );

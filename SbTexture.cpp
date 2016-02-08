@@ -26,7 +26,7 @@ SbTexture::~SbTexture()
 void
 SbTexture::clear()
 {
-  if( texture_ != NULL )
+  if ( texture_ )
     {
       SDL_DestroyTexture( texture_ );
       texture_ = nullptr;
