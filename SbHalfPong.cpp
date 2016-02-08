@@ -273,8 +273,8 @@ Ball::move(const SDL_Rect& paddleBox)
   bounding_rect_.x += x_velocity;
   if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
     goal_ = 1;
-    bounding_rect_.x = int(window->width() * 0.005);
-    bounding_rect_.y = window->height() / 2 ;
+    bounding_rect_.x = paddleBox.x - bounding_rect_.w - 2;
+    bounding_rect_.y = paddleBox.y + paddleBox.h / 2 - bounding_rect_.h/2 ;
     move_bounding_box();
     return goal_;
   }
@@ -336,7 +336,7 @@ void
 Ball::reset()
 {
   goal_ = 0;
-  //  if ( velocity_x_ > 0 ) velocity_x_ *= -1;
+  if ( velocity_x_ > 0 ) velocity_x_ *= -1;
   timer_.start();
 }
 
@@ -437,10 +437,20 @@ int main()
 	fps_counter.handle_event( event );
 	goals.handle_event( event );
       }
-      // move objects
+      // move objects   
       if ( goal_counter > 0 ) {
 	paddle.move();
+#ifdef DEBUG
+	std::cout << "Paddle moved: " << std::flush;
+	paddle.print_dimensions(std::cout);
+	std::cout << std::endl;
+#endif  // DEBUG
 	int goal = ball.move( paddle.bounding_rect() );
+#ifdef DEBUG
+	std::cout << "Ball moved: " << std::flush;
+	ball.print_dimensions(std::cout);
+	std::cout << std::endl;
+#endif  // DEBUG
 	if ( goal ) {
 	  reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
 	  --goal_counter;

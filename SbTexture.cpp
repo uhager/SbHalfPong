@@ -119,7 +119,7 @@ SbTexture::render( SDL_Renderer* renderer, int x, int y, SDL_Rect* sourceRect)
 
 
 void
-SbTexture::render( SDL_Renderer* renderer, SDL_Rect *bounding_box, SDL_Rect* sourceRect)
+SbTexture::render( SDL_Renderer* renderer, SDL_Rect *bounding_rect, SDL_Rect* sourceRect)
 {
-  SDL_RenderCopy( renderer, texture_, sourceRect, bounding_box );
+  SDL_RenderCopy( renderer, texture_, sourceRect, bounding_rect );
 }

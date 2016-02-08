@@ -88,6 +88,19 @@ SbObject::move( )
 
 
 
+std::ostream&
+SbObject::print_dimensions(std::ostream& os)
+{
+  os << "window = " << window->height() << "x" << window->width()
+     << " bounding box: " << bounding_box_[0] << "," << bounding_box_[1]
+     << " - " << bounding_box_[2] << "x" << bounding_box_[3]
+     << " ;bounding rect: " << bounding_rect_.x << "," << bounding_rect_.y
+     << " - "  << bounding_rect_.w << "x" << bounding_rect_.h;
+  return os;
+}
+
+
+
 void
 SbObject::render()
 {

@@ -7,6 +7,7 @@
 #define SBOBJECT_H
 
 #include <vector>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 
@@ -32,6 +33,7 @@ static SbWindow* window;
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
   void move_bounding_box();
+  std::ostream& print_dimensions(std::ostream& os); 
   void start_timer() {timer_.start();}
   Uint32 time() {return timer_.get_time();}
   virtual void was_hit();

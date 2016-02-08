@@ -23,7 +23,7 @@ public:
   SbTexture* from_text( SDL_Renderer* renderer, const std::string& text, TTF_Font* font, const SDL_Color& color );
   void clear();
   void render( SDL_Renderer* renderer, int x, int y, SDL_Rect* sourceRect = nullptr);
-  void render( SDL_Renderer* renderer, SDL_Rect *bounding_box, SDL_Rect* sourceRect = nullptr);
+  void render( SDL_Renderer* renderer, SDL_Rect *bounding_rect, SDL_Rect* sourceRect = nullptr);
   int getWidth(){ return width_; }
   int getHeight(){ return height_;}
 
