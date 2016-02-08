@@ -66,6 +66,7 @@ private:
   std::uniform_int_distribution<int> distr_lifetime { 100, 400 };
 
   void create_sparks();
+  void center_in_front(const SDL_Rect& paddleBox);
   void delete_spark(int index);
 };
 
@@ -195,24 +196,6 @@ Spark::expire(Uint32 interval, void* param)
 
 
 
-Uint32
-Ball::remove_spark(Uint32 interval, void *param, int index )
-{
-  ((Ball*)param)->delete_spark(index);
-  return(0);
-}
-
-
-
-
-void
-Ball::delete_spark(int index)
-{
-  std::remove_if( sparks_.begin(), sparks_.end(),
-		  [index](Spark& spark) -> bool { return spark.index() == index;} );
-  // ((Spark*)param)->set_texture( nullptr );
-}
-
 
 
 /*! Ball implementation
@@ -226,6 +209,16 @@ Ball::Ball()
   velocity_ = 1500;
   texture_ = new SbTexture();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
+}
+
+
+
+void
+Ball::center_in_front(const SDL_Rect& paddleBox)
+{
+    bounding_rect_.x = paddleBox.x - bounding_rect_.w - 2;
+    bounding_rect_.y = paddleBox.y + paddleBox.h / 2 - bounding_rect_.h/2 ;
+    move_bounding_box();
 }
 
 
@@ -262,10 +255,23 @@ Ball::create_sparks()
 
 
 
+void
+Ball::delete_spark(int index)
+{
+  std::remove_if( sparks_.begin(), sparks_.end(),
+		  [index](Spark& spark) -> bool { return spark.index() == index;} );
+  // ((Spark*)param)->set_texture( nullptr );
+}
+
+
+
 int
 Ball::move(const SDL_Rect& paddleBox)
 {
-  if ( goal_ ) return 0;
+  if ( goal_ ) {
+    center_in_front(paddleBox);
+    return 0;
+  }
   Uint32 deltaT = timer_.get_time();
   int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
   int y_velocity = ( window->height() / velocity_y_ ) * deltaT;  
@@ -273,19 +279,17 @@ Ball::move(const SDL_Rect& paddleBox)
   bounding_rect_.x += x_velocity;
   if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
     goal_ = 1;
-    bounding_rect_.x = paddleBox.x - bounding_rect_.w - 2;
-    bounding_rect_.y = paddleBox.y + paddleBox.h / 2 - bounding_rect_.h/2 ;
-    move_bounding_box();
+    center_in_front(paddleBox);
     return goal_;
   }
   
   bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
   if ( bounding_rect_.x + bounding_rect_.w/2 >= paddleBox.x &&
-       bounding_rect_.x - bounding_rect_.w/2 <= paddleBox.x + paddleBox.w )
+       bounding_rect_.x + bounding_rect_.w/2 <= paddleBox.x + paddleBox.w )
     in_xrange = true;
       
   if ( bounding_rect_.y + bounding_rect_.h/2 >= paddleBox.y  &&
-       bounding_rect_.y - bounding_rect_.h/2 <= paddleBox.y + paddleBox.h)
+       bounding_rect_.y + bounding_rect_.h/2 <= paddleBox.y + paddleBox.h)
      in_yrange = true;
 
   if ( bounding_rect_.x + bounding_rect_.w >= paddleBox.x               &&
@@ -307,6 +311,16 @@ Ball::move(const SDL_Rect& paddleBox)
   move_bounding_box();
   timer_.start();
   return goal_;
+}
+
+
+
+
+Uint32
+Ball::remove_spark(Uint32 interval, void *param, int index )
+{
+  ((Ball*)param)->delete_spark(index);
+  return(0);
 }
 
 
