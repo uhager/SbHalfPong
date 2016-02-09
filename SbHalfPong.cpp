@@ -40,6 +40,7 @@ Paddle::Paddle()
   SDL_Color color = {210, 160, 10, 0};
   texture_ = new SbTexture();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
+  name_ = "paddle";
 }
 
 
@@ -127,6 +128,7 @@ Ball::Ball()
   velocity_ = 1500;
   texture_ = new SbTexture();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
+  name_ = "ball";
 }
 
 
@@ -283,29 +285,13 @@ Ball::resetball(Uint32 interval, void *param )
 
 
 
-Message::Message(double x, double y, double width, double height)
-  : SbObject(x,y,width,height)
+GameOver::GameOver(TTF_Font *font)
+  : SbMessage(0.4,0.6,0.3,0.2)
 {
+  name_ = "gameover" ;
+  font_ = font;
+  set_text("Game Over");
 }
-
-
-
-void
-Message::set_text(std::string message)
-{
-  if ( !font_)
-    throw std::runtime_error( "[Message::set_text] no font. Call set_font before setting the text." );
-
-  texture_->from_text( window->renderer(), message, font_, color_);
-}
-
-
-
-Message::~Message()
-{
-  font_ = nullptr;
-}
-
 
 
 
@@ -328,16 +314,11 @@ int main()
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-    Message fps_counter(0,0,0.07,0.035);
-    Message goals(0.2,0.003,0.07,0.09);
-    Message game_over(0.4,0.6,0.3,0.2);
+    SbMessage fps_counter(0,0,0.07,0.035);
+    SbMessage goals(0.2,0.003,0.07,0.09);
+    GameOver game_over(fps_font);
     fps_counter.set_font(fps_font);
     goals.set_font(fps_font);
-    game_over.set_font(fps_font);
-    game_over.set_text("Game Over");
-    
-    // SbTexture *fps_texture = new SbTexture();
-    // SDL_Color fps_color = {210, 160, 10, 0};
     SbTimer fps_timer;
 
     int goal_counter = 3;
@@ -402,10 +383,8 @@ int main()
       if ( goal_counter == 0 ) {
 	game_over.render();
       }
-      paddle.render();
-      ball.render();
-      fps_counter.render();
-      goals.render();
+      std::for_each( objects.begin(), objects.end(),
+      		     [](SbObject* obj) {if (obj->name() != "gameover") obj->render(); } );
       SDL_RenderPresent( window.renderer() );
       ++frame_counter;  
     }

@@ -8,7 +8,7 @@ CXX = g++
 CXXFLAGS += -O2 -fpic -Wall -std=c++11 -I.
 DEBUG_FLAGS = -g -DDEBUG 
 
-OBJS = SbTexture.o SbTimer.o SbWindow.o SbObject.o SbHalfPong.o
+OBJS = SbTexture.o SbTimer.o SbWindow.o SbObject.o SbMessage.o SbHalfPong.o
 
 
 all: SbHalfPong

@@ -2,6 +2,10 @@
 author: Ulrike Hager
 */
 
+#ifndef SBHALFPONG_H
+#define SBHALFPONG_H
+
+
 #include <random>
 #include <string>
 
@@ -10,6 +14,7 @@ author: Ulrike Hager
 #include <SDL2/SDL_ttf.h>
 
 #include "SbObject.h"
+#include "SbMessage.h"
 
 
 class Ball;
@@ -82,18 +87,12 @@ private:
 
 
   
-class Message : public SbObject
+
+class GameOver : public SbMessage
 {
-public:
-  Message(double x, double y, double width, double height);
-  ~Message();
-
-  void set_font(TTF_Font* font){ font_ = font;}
-  void set_text(std::string text);
-
-private:
-  TTF_Font* font_ = nullptr;
-  SDL_Color color_{210, 160, 10, 0};
+ public:
+  GameOver(TTF_Font *font);
 };
 
 
+#endif  // SBHALFPONG_H

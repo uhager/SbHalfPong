@@ -4,7 +4,7 @@
  */
 
 #include <iostream>
-#include <cmath>
+//#include <cmath>
 
 #include "SbTexture.h"
 #include "SbWindow.h"

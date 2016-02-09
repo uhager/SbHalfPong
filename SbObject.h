@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <iostream>
+#include <array>
 
 #include <SDL2/SDL.h>
 
@@ -33,6 +34,7 @@ static SbWindow* window;
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
   void move_bounding_box();
+  std::string name(){return name_;}
   std::ostream& print_dimensions(std::ostream& os); 
   void start_timer() {timer_.start();}
   Uint32 time() {return timer_.get_time();}
@@ -50,6 +52,7 @@ protected:
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
   SbTimer timer_;
+  std::string name_ = "other"; 
 };
 
 
