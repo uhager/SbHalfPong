@@ -438,7 +438,7 @@ int main()
 	  case SDLK_ESCAPE:
 	    quit = true;
 	    break;
-	  case SDLK_n:
+	  case SDLK_n: case SDLK_SPACE: case SDLK_RETURN:
 	    goal_counter = 3;
 	    ball.reset();
 	    goals.set_text( std::to_string(goal_counter) );
@@ -450,21 +450,12 @@ int main()
 	ball.handle_event( event );
 	fps_counter.handle_event( event );
 	goals.handle_event( event );
+	game_over.handle_event( event );
       }
       // move objects   
       if ( goal_counter > 0 ) {
 	paddle.move();
-#ifdef DEBUG
-	std::cout << "Paddle moved: " << std::flush;
-	paddle.print_dimensions(std::cout);
-	std::cout << std::endl;
-#endif  // DEBUG
 	int goal = ball.move( paddle.bounding_rect() );
-#ifdef DEBUG
-	std::cout << "Ball moved: " << std::flush;
-	ball.print_dimensions(std::cout);
-	std::cout << std::endl;
-#endif  // DEBUG
 	if ( goal ) {
 	  reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
 	  --goal_counter;
