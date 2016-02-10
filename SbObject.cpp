@@ -66,6 +66,18 @@ SbObject::handle_event(const SDL_Event& event)
 
 
 
+bool
+SbObject::is_inside(int x, int y)
+{
+  bool result = true;
+  if ( x < bounding_rect_.x || x > bounding_rect_.x + bounding_rect_.w ||
+       y < bounding_rect_.y || y > bounding_rect_.y + bounding_rect_.h )
+    result = false;
+  return result;
+
+}
+
+
 int
 SbObject::move( std::vector<SbObject*> objects_to_hit )
 {
@@ -86,6 +98,15 @@ SbObject::move( )
   return 0;
 }
 
+
+
+void
+SbObject::move_bounding_box()
+{
+  bounding_box_[0] = double(bounding_rect_.x) / window->width();
+  bounding_box_[1] = double(bounding_rect_.y) / window->height();
+}
+  
 
 
 std::ostream&
@@ -109,13 +130,6 @@ SbObject::render()
 
 
 
-void
-SbObject::move_bounding_box()
-{
-  bounding_box_[0] = double(bounding_rect_.x) / window->width();
-  bounding_box_[1] = double(bounding_rect_.y) / window->height();
-}
-  
 void
 SbObject::was_hit()
 {

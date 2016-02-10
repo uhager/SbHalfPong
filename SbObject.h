@@ -33,6 +33,7 @@ static SbWindow* window;
   virtual void render();
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
+  bool is_inside(int x, int y);
   void move_bounding_box();
   std::string name(){return name_;}
   std::ostream& print_dimensions(std::ostream& os); 
