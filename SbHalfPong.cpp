@@ -188,9 +188,10 @@ Ball::delete_spark(int index)
 int
 Ball::move(const SDL_Rect& paddleBox)
 {
+  int result = 0;
   if ( goal_ ) {
     center_in_front(paddleBox);
-    return 0;
+    return result;
   }
   Uint32 deltaT = timer_.get_time();
   int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
@@ -222,15 +223,17 @@ Ball::move(const SDL_Rect& paddleBox)
 
   if ( ( x_hit && in_yrange ) || bounding_rect_.x <= 0  ) {
     velocity_x_ *= -1;
-    if ( x_hit && in_yrange )
+    if ( x_hit && in_yrange ) {
       create_sparks();
+      result = 2;
+    }
   }
   if ( ( y_hit && in_xrange ) || bounding_rect_.y <= 0 || ( bounding_rect_.y + bounding_rect_.h >= window->height() ) )
     velocity_y_ *= -1;
  
   move_bounding_box();
   timer_.start();
-  return goal_;
+  return result;
 }
 
 
@@ -314,15 +317,19 @@ int main()
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-    SbMessage fps_counter(0,0,0.07,0.035);
-    SbMessage goals(0.2,0.003,0.07,0.09);
+    SbMessage fps_counter(0,0,0.06,0.035);
+    SbMessage lives(0.2,0.003,0.13,0.07);
+    SbMessage score_text(0.5, 0.003, 0.13, 0.07);
     GameOver game_over(fps_font);
     fps_counter.set_font(fps_font);
-    goals.set_font(fps_font);
+    lives.set_font(fps_font);
+    score_text.set_font(fps_font);
     SbTimer fps_timer;
 
     int goal_counter = 3;
-    goals.set_text( std::to_string(goal_counter) );
+    lives.set_text( "Lives: " + std::to_string(goal_counter) );
+    int score = 0;
+    score_text.set_text( "Score: " + std::to_string(score) );
     
     SDL_TimerID reset_timer = 0;
     SDL_Event event;
@@ -334,7 +341,8 @@ int main()
     objects.push_back(&paddle);
     objects.push_back(&ball);
     objects.push_back(&fps_counter);
-    objects.push_back(&goals);
+    objects.push_back(&lives);
+    objects.push_back(&score_text);
     objects.push_back(&game_over);
     
     while (!quit) {
@@ -348,7 +356,9 @@ int main()
 	  case SDLK_n: case SDLK_SPACE: case SDLK_RETURN:
 	    goal_counter = 3;
 	    ball.reset();
-	    goals.set_text( std::to_string(goal_counter) );
+	    lives.set_text( "Lives: " + std::to_string(goal_counter) );
+	    score = 0;
+	    score_text.set_text( "Score: " + std::to_string(score) );
 	    break;
 	  }
 	}
@@ -360,10 +370,16 @@ int main()
       if ( goal_counter > 0 ) {
 	paddle.move();
 	int goal = ball.move( paddle.bounding_rect() );
-	if ( goal ) {
+	switch (goal) {
+	case 1: 
 	  reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
 	  --goal_counter;
-	  goals.set_text( std::to_string(goal_counter) );
+	  lives.set_text( "Lives: " + std::to_string(goal_counter) );
+	  break;
+	case 2:
+	  ++score;
+	  score_text.set_text( "Score: " + std::to_string(score) );
+	  break;
 	}
       }
 
