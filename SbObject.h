@@ -33,6 +33,7 @@ static SbWindow* window;
   virtual void render();
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
+  bool has_mouse(){return has_mouse_;}
   bool is_inside(int x, int y);
   void move_bounding_box();
   std::string name(){return name_;}
@@ -53,7 +54,8 @@ protected:
   SbTexture* texture_ = nullptr;
   SDL_Color color = {210, 160, 10, 0};
   SbTimer timer_;
-  std::string name_ = "other"; 
+  std::string name_ = "other";
+  bool has_mouse_ = false;
 };
 
 

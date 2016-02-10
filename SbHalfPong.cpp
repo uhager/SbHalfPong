@@ -48,6 +48,7 @@ Paddle::Paddle()
 void
 Paddle::handle_event(const SDL_Event& event)
 {
+  
   SbObject::handle_event( event );
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
@@ -59,6 +60,25 @@ Paddle::handle_event(const SDL_Event& event)
     switch( event.key.keysym.sym ) {
     case SDLK_UP: velocity_y_ += velocity_; break;
     case SDLK_DOWN: velocity_y_ -= velocity_; break;
+    }
+  }
+  else if (event.type == SDL_MOUSEBUTTONDOWN)
+    {
+      int mouse_x = -1, mouse_y = -1;
+      SDL_GetMouseState( &mouse_x, &mouse_y );
+      is_inside( mouse_x, mouse_y );
+#ifdef DEBUG
+      std::cout << "[Paddle::handle_event] mouse click is " << ( has_mouse()? "inside" : "outside" ) << std::endl;
+#endif // DEBUG
+    }
+  else if (event.type == SDL_MOUSEBUTTONUP) {
+    // SDL_GetMouseState( &mouse_x, &mouse_y );
+    has_mouse_ = false;
+  }
+  else if (event.type == SDL_MOUSEMOTION) {
+    if ( has_mouse() ) {
+      int y_rel = event.motion.yrel;
+      bounding_rect_.y += y_rel;
     }
   }
 }
@@ -382,6 +402,8 @@ int main()
 	  break;
 	}
       }
+      else
+	 ball.move( paddle.bounding_rect() );
 
       // fps counter
       if ( frame_counter > 0 && frame_counter < 1000 /*INT_MAX*/ ) {

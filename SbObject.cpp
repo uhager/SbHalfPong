@@ -49,9 +49,6 @@ SbObject::~SbObject()
 void
 SbObject::handle_event(const SDL_Event& event)
 {
-#ifdef DEBUG
-  std::cout << "[SbObject::handle_event]" << std::endl;
-#endif
   if ( window->new_size() ) {
     // update bounding_box_ origin in case object moved
    // velocity_x_ = static_cast<int>(scale[0] * velocity_x_);
@@ -69,12 +66,11 @@ SbObject::handle_event(const SDL_Event& event)
 bool
 SbObject::is_inside(int x, int y)
 {
-  bool result = true;
+  has_mouse_ = true;
   if ( x < bounding_rect_.x || x > bounding_rect_.x + bounding_rect_.w ||
        y < bounding_rect_.y || y > bounding_rect_.y + bounding_rect_.h )
-    result = false;
-  return result;
-
+    has_mouse_ = false;
+  return has_mouse_;
 }
 
 
