@@ -323,6 +323,15 @@ SbWindow* SbObject::window;
 TTF_Font *fps_font = nullptr;
 
 
+void
+close()
+{
+  TTF_CloseFont( fps_font );
+  fps_font = nullptr;
+  TTF_Quit();
+}
+
+
 int main()
 {
   try {
@@ -430,6 +439,7 @@ int main()
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;
   }
+  close();
   return 0;
 }
   
