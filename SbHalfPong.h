@@ -95,4 +95,19 @@ class GameOver : public SbMessage
 };
 
 
+
+class HighScore : public SbMessage
+{
+ public:
+  HighScore(TTF_Font *font, std::string filename = "save");
+  void new_highscore( int score );
+  void old_highscore( int score );
+  int read_highscore();
+  void write_highscore();
+
+ private:
+  int highscore_;
+  std::string savefile_;
+};
+
 #endif  // SBHALFPONG_H

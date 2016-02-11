@@ -309,12 +309,80 @@ Ball::resetball(Uint32 interval, void *param )
 
 
 GameOver::GameOver(TTF_Font *font)
-  : SbMessage(0.4,0.6,0.3,0.2)
+  : SbMessage(0.4,0.55,0.3,0.2)
 {
   name_ = "gameover" ;
   font_ = font;
   set_text("Game Over");
 }
+
+
+
+
+/*! HighScore implementation
+ */
+
+HighScore::HighScore(TTF_Font *font, std::string filename)
+  : SbMessage(0.4,0.75,0.5,0.2)
+{
+  name_ = "gameover" ;  //!< same name to render only when game over.
+  savefile_ = filename;
+  font_ = font;
+}
+
+
+void
+HighScore::new_highscore( int score )
+{
+#ifdef DEBUG
+  std::cout << "[HighScore::new_highscore]" << std::endl;
+#endif // DEBUG
+  set_text( " ** New Highscore: " + std::to_string(score) + " ** " );
+  highscore_ = score;
+  write_highscore();
+}
+
+
+void
+HighScore::old_highscore( int score )
+{
+#ifdef DEBUG
+  std::cout << "[HighScore::old_highscore]" << std::endl;
+#endif // DEBUG
+  set_text( "Score: " + std::to_string(score) +  " Highscore: " + std::to_string(highscore_) );
+}
+
+
+
+int
+HighScore::read_highscore()
+{
+  highscore_ = 0;
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
+  if ( !file ) {
+    file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
+    SDL_RWwrite( file, &highscore_, sizeof(int), 1 );
+  }
+  else {
+    SDL_RWread( file, &highscore_, sizeof(int), 1 );
+  }
+  SDL_RWclose( file );
+  return highscore_;
+}
+
+
+
+void
+HighScore::write_highscore()
+{
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "r+b" );
+  if ( !file ) {
+    file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
+  }
+  SDL_RWwrite( file, &highscore_, sizeof(int), 1 );
+  SDL_RWclose( file );
+}
+
 
 
 
@@ -350,6 +418,7 @@ int main()
     SbMessage lives(0.2,0.003,0.13,0.07);
     SbMessage score_text(0.5, 0.003, 0.13, 0.07);
     GameOver game_over(fps_font);
+    HighScore high_score(fps_font);
     fps_counter.set_font(fps_font);
     lives.set_font(fps_font);
     score_text.set_font(fps_font);
@@ -359,7 +428,9 @@ int main()
     lives.set_text( "Lives: " + std::to_string(goal_counter) );
     int score = 0;
     score_text.set_text( "Score: " + std::to_string(score) );
-    
+
+    int highscore = high_score.read_highscore(  );
+
     SDL_TimerID reset_timer = 0;
     SDL_Event event;
     bool quit = false;
@@ -373,6 +444,7 @@ int main()
     objects.push_back(&lives);
     objects.push_back(&score_text);
     objects.push_back(&game_over);
+    objects.push_back(&high_score);
     
     while (!quit) {
       while( SDL_PollEvent( &event ) ) {
@@ -401,8 +473,19 @@ int main()
 	int goal = ball.move( paddle.bounding_rect() );
 	switch (goal) {
 	case 1: 
-	  reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
 	  --goal_counter;
+	  if (goal_counter > 0 ) {
+	    reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
+	  }
+	  else {
+	    if ( score > highscore ) {
+	      highscore = score;
+	      high_score.new_highscore( score );
+	    }
+	    else {
+	      high_score.old_highscore( score ) ;
+	    }
+	  }
 	  lives.set_text( "Lives: " + std::to_string(goal_counter) );
 	  break;
 	case 2:
@@ -427,11 +510,13 @@ int main()
 
       // render
       SDL_RenderClear( window.renderer() );
-      if ( goal_counter == 0 ) {
-	game_over.render();
-      }
       std::for_each( objects.begin(), objects.end(),
       		     [](SbObject* obj) {if (obj->name() != "gameover") obj->render(); } );
+
+      if ( goal_counter == 0 ) {
+	game_over.render();
+	high_score.render();
+      }
       SDL_RenderPresent( window.renderer() );
       ++frame_counter;  
     }
