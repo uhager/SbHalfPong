@@ -424,15 +424,13 @@ int main()
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-    SbMessage fps_counter(0,0,0.06,0.035);
+    SbFpsDisplay fps_display( fps_font );
     SbMessage lives(0.2,0.003,0.13,0.07);
     SbMessage score_text(0.5, 0.003, 0.13, 0.07);
     GameOver game_over(fps_font);
     HighScore high_score(fps_font);
-    fps_counter.set_font(fps_font);
     lives.set_font(fps_font);
     score_text.set_font(fps_font);
-    SbTimer fps_timer;
 
     int goal_counter = 3;
     lives.set_text( "Lives: " + std::to_string(goal_counter) );
@@ -446,15 +444,14 @@ int main()
     bool quit = false;
 
     int frame_counter = 0;
-    fps_timer.start();
 
     objects.push_back(&paddle);
     objects.push_back(&ball);
-    objects.push_back(&fps_counter);
     objects.push_back(&lives);
     objects.push_back(&score_text);
     objects.push_back(&game_over);
     objects.push_back(&high_score);
+    objects.push_back(&fps_display);
     
     while (!quit) {
       while( SDL_PollEvent( &event ) ) {
@@ -508,15 +505,7 @@ int main()
 	 ball.move( paddle.bounding_rect() );
 
       // fps counter
-      if ( frame_counter > 0 && frame_counter < 1000 /*INT_MAX*/ ) {
-	double average = double(frame_counter)/ ( fps_timer.get_time()/1000.0 ) ;
-	std::string fps_text = std::to_string(int(average)) + " fps";
-	fps_counter.set_text( fps_text ); 
-      }
-      else {
-	frame_counter = 0;
-	fps_timer.start();
-      }
+      fps_display.update();
 
       // render
       SDL_RenderClear( window.renderer() );

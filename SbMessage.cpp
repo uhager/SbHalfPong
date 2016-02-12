@@ -35,3 +35,37 @@ SbMessage::~SbMessage()
 }
 
 
+
+SbFpsDisplay::SbFpsDisplay(TTF_Font *font, double x, double y, double width, double height)
+  : SbMessage(x,y,width,height)
+{
+  name_ = "fps";
+  set_font(font);
+  start_timer();
+}
+
+
+void
+SbFpsDisplay::set_number_frames( unsigned int n )
+{
+  n_frames_ = n;
+  while ( times_.size() > n_frames_ ) {
+    sum_ -= times_.front();
+    times_.pop_front();
+  }
+}
+
+
+void
+SbFpsDisplay::update()
+{
+  times_.push_back( time() );
+  start_timer();
+  sum_ += times_.back();
+  if ( times_.size() > n_frames_ ) {
+    sum_ -= times_.front();
+    times_.pop_front();
+  }
+  double average = 1000 * times_.size() / sum_ ;
+  set_text( std::to_string( int(average) ) + " fps" );
+}
