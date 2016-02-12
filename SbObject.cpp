@@ -121,7 +121,7 @@ SbObject::print_dimensions(std::ostream& os)
 void
 SbObject::render()
 {
-  if (texture_) texture_->render( window->renderer(), &bounding_rect_ );
+  if (render_me_ && texture_) texture_->render( window->renderer(), &bounding_rect_ );
 }
 
 

@@ -56,6 +56,7 @@ protected:
   SbTimer timer_;
   std::string name_ = "other";
   bool has_mouse_ = false;
+  bool render_me_ = true;
 };
 
 
