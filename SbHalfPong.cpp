@@ -224,7 +224,7 @@ Ball::move(const SDL_Rect& paddleBox)
     return goal_;
   }
   
-  bool in_xrange = false, in_yrange = false, x_hit = false, y_hit = false ;
+  bool in_xrange = false, in_yrange = false, x_hit = false, y_hit_top = false, y_hit_bottom = false ;
   if ( bounding_rect_.x + bounding_rect_.w/2 >= paddleBox.x &&
        bounding_rect_.x + bounding_rect_.w/2 <= paddleBox.x + paddleBox.w )
     in_xrange = true;
@@ -238,18 +238,28 @@ Ball::move(const SDL_Rect& paddleBox)
     x_hit = true;
 
   if ( bounding_rect_.y + bounding_rect_.h >= paddleBox.y               &&
-       bounding_rect_.y                   <= paddleBox.y + paddleBox.h )
-    y_hit = true;
-
-  if ( ( x_hit && in_yrange ) || bounding_rect_.x <= 0  ) {
-    velocity_x_ *= -1;
-    if ( x_hit && in_yrange ) {
-      create_sparks();
-      result = 2;
-    }
+       bounding_rect_.y                   <= paddleBox.y + paddleBox.h ) {
+    if ( bounding_rect_.y > paddleBox.y ) 
+      y_hit_bottom = true;
+    else if ( bounding_rect_.y + bounding_rect_.h < paddleBox.y + paddleBox.h )
+      y_hit_top = true;
   }
-  if ( ( y_hit && in_xrange ) || bounding_rect_.y <= 0 || ( bounding_rect_.y + bounding_rect_.h >= window->height() ) )
-    velocity_y_ *= -1;
+  
+  if ( ( x_hit && in_yrange )   ) {
+    if ( velocity_x_ > 0 ) velocity_x_ *= -1;
+    create_sparks();
+    result = 2;
+  }
+  else if (bounding_rect_.x <= 0) {
+    if ( velocity_x_ < 0 ) velocity_x_ *= -1;  
+  }
+  
+  if ( ( y_hit_bottom && in_xrange )  || bounding_rect_.y <= 0 ) {
+    if ( velocity_y_ < 0 ) velocity_y_ *= -1;
+  }
+  else if ( ( y_hit_top && in_xrange )|| ( bounding_rect_.y + bounding_rect_.h >= window->height() ) ) {
+    if ( velocity_y_ > 0 ) velocity_y_ *= -1;
+  }
  
   move_bounding_box();
   timer_.start();
