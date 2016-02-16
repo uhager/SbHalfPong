@@ -81,7 +81,10 @@ SbWindow::handle_event(const SDL_Event& event)
       break;
     }
   }
-  else if( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) { 
+  else if( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) {
+    const Uint8 *state = SDL_GetKeyboardState(nullptr);
+    if (state[SDL_SCANCODE_LALT]) return;  // toggles fps display
+
     if ( is_fullscreen ) {
       SDL_SetWindowFullscreen( window_, SDL_FALSE );
       SDL_GetWindowSize( window_, &width_, &height_ );

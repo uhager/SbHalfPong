@@ -35,6 +35,7 @@ class SbFpsDisplay : public SbMessage
 {
  public:
   SbFpsDisplay(TTF_Font *font, double x = 0, double y = 0, double width = 0.06, double height= 0.035);
+  void handle_event(const SDL_Event& event) override;
   void set_number_frames( unsigned int n );
   void update();
   
