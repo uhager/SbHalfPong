@@ -41,7 +41,7 @@ SbWindow::initialize(std::string title, int width, int height)
     std::cerr << "Could not create renderer. SDL_Error: " <<  SDL_GetError() << std::endl;
     exit(1);
   }
-  SDL_SetRenderDrawColor( renderer_, 0xFF, 0xFF, 0xFF, 0xFF );
+  SDL_SetRenderDrawColor( renderer_, 0x0, 0x0, 0x0, 0x0 );
 
   if (TTF_Init() != 0){
     std::cerr << "[SbWindow::initialize] Error in TTF_init: " << SDL_GetError() << std::endl;

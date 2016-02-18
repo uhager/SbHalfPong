@@ -8,10 +8,13 @@ CXX = g++
 CXXFLAGS += -O2 -fpic -Wall -std=c++11 -I.
 DEBUG_FLAGS = -g -DDEBUG 
 
-OBJS = SbTexture.o SbTimer.o SbWindow.o SbObject.o SbMessage.o SbHalfPong.o
+OBJS = SbTexture.o SbTimer.o SbWindow.o SbObject.o SbMessage.o
+PONGOBJS = $(OBJS) SbHalfPong.o
+MAZEOBJS = $(OBJS) SbMaze.o
 
-
-all: SbHalfPong
+all: $(OBJS) pong maze
+pong: $(PONGOBJS) SbHalfPong
+maze: $(MAZEOBJS) SbMaze
 
 debug: CXXFLAGS += $(DEBUG_FLAGS)
 debug: all
@@ -22,8 +25,11 @@ debug: all
 	$(CXX) $(CXXFLAGS) $(SDL_INCLUDES) -o $@ -c $<
 
 
-SbHalfPong: $(OBJS) 
-	$(CXX) $(CXXFLAGS) $(OBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
+SbHalfPong: $(PONGOBJS) 
+	$(CXX) $(CXXFLAGS) $(PONGOBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
+
+SbMaze: $(MAZEOBJS) 
+	$(CXX) $(CXXFLAGS) $(MAZEOBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
 
 clean:
-	rm -f *.o *.so $(OBJS) SbHalfPong
+	rm -f *.o *.so $(OBJS) SbHalfPong SbMaze
