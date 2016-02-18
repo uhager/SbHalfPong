@@ -36,7 +36,7 @@ Paddle::Paddle()
 {
   //  bounding_rect_ = {}; 
   velocity_y_ = 0;
-  velocity_ = 1200;
+  velocity_ = 1.0/1200.0;
   SDL_Color color = {210, 160, 10, 0};
   texture_ = new SbTexture();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
@@ -89,7 +89,7 @@ int
 Paddle::move()
 {
   Uint32 deltaT = timer_.get_time();
-  int velocity = ( window->height() / velocity_y_ )* deltaT; 
+  int velocity = (int)( window->height() * velocity_y_ * deltaT); 
   bounding_rect_.y += velocity;
   if( ( bounding_rect_.y < 0 ) || ( bounding_rect_.y + bounding_rect_.h > window->height() ) ) {
     bounding_rect_.y -= velocity;
@@ -143,9 +143,9 @@ Ball::Ball()
   : SbObject(50, 300, 25, 25)
 {
   //  bounding_box_ = {};
-  velocity_y_ = 1500;
-  velocity_x_ = 1500;
-  velocity_ = 1500;
+  velocity_y_ = 1.0/1500.0;
+  velocity_x_ = 1.0/1500.0;
+  velocity_ = 1.0/1500.0;
   texture_ = new SbTexture();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
   name_ = "ball";
@@ -214,8 +214,8 @@ Ball::move(const SDL_Rect& paddleBox)
     return result;
   }
   Uint32 deltaT = timer_.get_time();
-  int x_velocity = ( window->width() / velocity_x_ ) * deltaT;
-  int y_velocity = ( window->height() / velocity_y_ ) * deltaT;  
+  int x_velocity = (int)( window->width() * velocity_x_ * deltaT );
+  int y_velocity = (int)( window->height() * velocity_y_ * deltaT );  
   bounding_rect_.y += y_velocity;
   bounding_rect_.x += x_velocity;
   if ( bounding_rect_.x + bounding_rect_.w >= window->width() ) {
