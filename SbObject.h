@@ -31,6 +31,7 @@ static SbWindow* window;
   virtual int move( std::vector<SbObject*> objects_to_hit );
   virtual int move( );
   virtual void render();
+  virtual void render(int camera_x, int camera_y);
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
@@ -41,6 +42,10 @@ static SbWindow* window;
   void start_timer() {timer_.start();}
   Uint32 time() {return timer_.get_time();}
   virtual void was_hit();
+  int width() const { return bounding_rect_.w;}
+  int height() const { return bounding_rect_.h;}
+  int pos_x() const { return bounding_rect_.x;}
+  int pos_y() const { return bounding_rect_.y;}
   
 protected:
   SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;

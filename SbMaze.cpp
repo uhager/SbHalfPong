@@ -73,13 +73,13 @@ Ball::move()
   if (bounding_rect_.x <= 0) {
     if ( velocity_x_ < 0 ) velocity_x_ *= -1*momentum_loss_;  
   }
-  else if ( bounding_rect_.x + bounding_rect_.w >= window->width() ){
+  else if ( bounding_rect_.x + bounding_rect_.w >= LEVEL_WIDTH ){
     if ( velocity_x_ > 0 ) velocity_x_ *= -1*momentum_loss_;  
   }
   if ( bounding_rect_.y <= 0 ) {
     if ( velocity_y_ < 0 ) velocity_y_ *= -1*momentum_loss_;
   }
-  else if ( bounding_rect_.y + bounding_rect_.h >= window->height() ) {
+  else if ( bounding_rect_.y + bounding_rect_.h >= LEVEL_HEIGHT ) {
     if ( velocity_y_ > 0 ) velocity_y_ *= -1*momentum_loss_;
   }
  
@@ -123,6 +123,24 @@ close()
 }
 
 
+void
+center_camera(SDL_Rect& camera, const Ball& ball, int win_width, int win_height) 
+{
+  camera.x = ball.pos_x() + ball.width()/2 - win_width/2;
+  camera.y = ball.pos_y() + ball.height()/2 - win_height/2;
+  if ( camera.x < 0 )
+      camera.x = 0;
+  else if ( camera.x > LEVEL_WIDTH - camera.w )
+      camera.x = LEVEL_WIDTH - camera.w;
+  
+  if ( camera.y < 0 )
+      camera.y = 0;
+  else if( camera.y > LEVEL_HEIGHT - camera.h )
+      camera.y = LEVEL_HEIGHT - camera.h;
+}
+
+
+
 int main()
 {
 
@@ -130,6 +148,7 @@ int main()
     SbWindow window;
     window.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
     SbObject::window = &window ;
+    SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     Ball ball;
     fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
     if ( !fps_font )
@@ -157,11 +176,12 @@ int main()
 
       }
       ball.move();
+      center_camera(camera, ball, window.width(), window.height());
       fps_display.update();
       
       SDL_RenderClear( window.renderer() );
       fps_display.render();
-      ball.render();
+      ball.render(camera.x, camera.y);
       SDL_RenderPresent( window.renderer() );
       
       ++frame_counter;      
