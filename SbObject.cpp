@@ -126,12 +126,12 @@ SbObject::render()
 
 
 void
-SbObject::render(int camera_x, int camera_y)
+SbObject::render( const SDL_Rect &camera )
 {
   if (render_me_ && texture_) {
     SDL_Rect camera_adjusted = bounding_rect_;
-    camera_adjusted.x -= camera_x;
-    camera_adjusted.y -= camera_y;
+    camera_adjusted.x -= camera.x;
+    camera_adjusted.y -= camera.y;
     texture_->render( window->renderer(), &camera_adjusted );
   }
 }

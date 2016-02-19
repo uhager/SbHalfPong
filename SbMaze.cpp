@@ -41,6 +41,22 @@ Ball::Ball()
 }
 
 
+void
+Ball::center_camera(SDL_Rect& camera) 
+{
+  camera.x = pos_x() + width()/2 - window->width()/2;
+  camera.y = pos_y() + height()/2 - window->height()/2;
+  if ( camera.x < 0 )
+      camera.x = 0;
+  else if ( camera.x > LEVEL_WIDTH - camera.w )
+      camera.x = LEVEL_WIDTH - camera.w;
+  
+  if ( camera.y < 0 )
+      camera.y = 0;
+  else if( camera.y > LEVEL_HEIGHT - camera.h )
+      camera.y = LEVEL_HEIGHT - camera.h;
+}
+
 
 void
 Ball::handle_event(const SDL_Event& event)
@@ -123,20 +139,12 @@ close()
 }
 
 
-void
-Ball::center_camera(SDL_Rect& camera) 
+
+std::vector<SbObject>
+create_level()
 {
-  camera.x = pos_x() + width()/2 - window->width()/2;
-  camera.y = pos_y() + height()/2 - window->height()/2;
-  if ( camera.x < 0 )
-      camera.x = 0;
-  else if ( camera.x > LEVEL_WIDTH - camera.w )
-      camera.x = LEVEL_WIDTH - camera.w;
-  
-  if ( camera.y < 0 )
-      camera.y = 0;
-  else if( camera.y > LEVEL_HEIGHT - camera.h )
-      camera.y = LEVEL_HEIGHT - camera.h;
+
+
 }
 
 
@@ -181,7 +189,7 @@ int main()
       
       SDL_RenderClear( window.renderer() );
       fps_display.render();
-      ball.render(camera.x, camera.y);
+      ball.render( camera );
       SDL_RenderPresent( window.renderer() );
       
       ++frame_counter;      

@@ -31,7 +31,7 @@ static SbWindow* window;
   virtual int move( std::vector<SbObject*> objects_to_hit );
   virtual int move( );
   virtual void render();
-  virtual void render(int camera_x, int camera_y);
+  virtual void render(const SDL_Rect &camera);
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
