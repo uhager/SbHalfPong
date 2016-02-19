@@ -124,10 +124,10 @@ close()
 
 
 void
-center_camera(SDL_Rect& camera, const Ball& ball, int win_width, int win_height) 
+Ball::center_camera(SDL_Rect& camera) 
 {
-  camera.x = ball.pos_x() + ball.width()/2 - win_width/2;
-  camera.y = ball.pos_y() + ball.height()/2 - win_height/2;
+  camera.x = pos_x() + width()/2 - window->width()/2;
+  camera.y = pos_y() + height()/2 - window->height()/2;
   if ( camera.x < 0 )
       camera.x = 0;
   else if ( camera.x > LEVEL_WIDTH - camera.w )
@@ -176,7 +176,7 @@ int main()
 
       }
       ball.move();
-      center_camera(camera, ball, window.width(), window.height());
+      ball.center_camera(camera);
       fps_display.update();
       
       SDL_RenderClear( window.renderer() );

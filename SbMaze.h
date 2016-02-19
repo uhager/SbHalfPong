@@ -23,6 +23,8 @@ class Ball : public SbObject
 {
 public:
   Ball();
+
+  void center_camera(SDL_Rect& camera);
   void handle_event(const SDL_Event& event);
   /*! \retval 1 if ball in goal
     \retval 0 else
