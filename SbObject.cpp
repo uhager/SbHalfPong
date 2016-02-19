@@ -138,6 +138,15 @@ SbObject::render( const SDL_Rect &camera )
 
 
 void
+SbObject::set_color( int red, int green, int blue )
+{
+  color_.r = red;
+  color_.g = green;
+  color_.b = blue;
+}
+
+
+void
 SbObject::was_hit()
 {
 #ifdef DEBUG

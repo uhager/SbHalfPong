@@ -23,6 +23,10 @@ public:
   SbObject() = default;
   SbObject(int x, int y, int width, int height);
   SbObject(double x, double y, double width, double height);
+  /* SbObject(SbObject&& toMove) */
+  /*   : texture_(toMove.texture_) */
+  /*   {} */
+  /* SbObject(const SbObject& toCopy) = default; */
   virtual ~SbObject();
 
 static SbWindow* window;
@@ -30,7 +34,7 @@ static SbWindow* window;
   virtual void handle_event(const SDL_Event& event);
   virtual int move( std::vector<SbObject*> objects_to_hit );
   virtual int move( );
-  virtual void render();
+  virtual void render() ;
   virtual void render(const SDL_Rect &camera);
   std::array<double,4> bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() {return bounding_rect_;}
@@ -40,6 +44,7 @@ static SbWindow* window;
   std::string name(){return name_;}
   std::ostream& print_dimensions(std::ostream& os); 
   void start_timer() {timer_.start();}
+  void set_color( int red, int green, int blue );
   Uint32 time() {return timer_.get_time();}
   virtual void was_hit();
   int width() const { return bounding_rect_.w;}
@@ -57,7 +62,7 @@ protected:
   double velocity_x_ = 0;
   double velocity_ = 0;
   SbTexture* texture_ = nullptr;
-  SDL_Color color = {210, 160, 10, 0};
+  SDL_Color color_ = {210, 160, 10, 0};
   SbTimer timer_;
   std::string name_ = "other";
   bool has_mouse_ = false;

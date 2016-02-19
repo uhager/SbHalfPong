@@ -25,8 +25,6 @@ public:
  protected: 
   TTF_Font* font_ = nullptr;
 
- private:
-  SDL_Color color_{210, 160, 10, 0};
 };
 
 

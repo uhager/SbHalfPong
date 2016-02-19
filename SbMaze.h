@@ -44,4 +44,10 @@ private:
 
 
 
+class Tile : public SbObject
+{
+ public:
+  Tile(int x, int y, int width, int height);
+};
+
 #endif  // SBMAZE_H

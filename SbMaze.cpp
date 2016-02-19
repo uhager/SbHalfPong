@@ -7,7 +7,7 @@ author: Ulrike Hager
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-
+#include <memory>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
@@ -124,6 +124,16 @@ Ball::resetball(Uint32 interval, void *param )
 }
 
 
+Tile::Tile(int x, int y, int width, int height)
+  : SbObject(x, y, width, height)
+{
+  SDL_Color color = {100, 10, 200, 0};
+  texture_ = new SbTexture();
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
+  name_ = "tile";
+}
+
+
 
 /////  globals /////
 SbWindow* SbObject::window;
@@ -140,11 +150,19 @@ close()
 
 
 
-std::vector<SbObject>
+std::vector<std::unique_ptr<Tile>>
 create_level()
 {
-
-
+  std::vector<std::unique_ptr<Tile>> result;
+  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}};
+  for (unsigned int i = 0; i < coords.size() ; ++i ){
+    int x = coords.at(i).at(0)*LEVEL_WIDTH;
+    int y = coords.at(i).at(1)*LEVEL_HEIGHT;
+    int w = coords.at(i).at(2)*LEVEL_WIDTH;
+    int h = coords.at(i).at(3)*LEVEL_HEIGHT;
+    result.emplace_back( std::unique_ptr<Tile>(new Tile(x, y, w, h)) );
+  }
+  return result;
 }
 
 
@@ -158,6 +176,8 @@ int main()
     SbObject::window = &window ;
     SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     Ball ball;
+    std::vector<std::unique_ptr<Tile>> level = create_level();
+    
     fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
@@ -188,6 +208,8 @@ int main()
       fps_display.update();
       
       SDL_RenderClear( window.renderer() );
+      for (auto& t: level)
+	t->render(camera);
       fps_display.render();
       ball.render( camera );
       SDL_RenderPresent( window.renderer() );
