@@ -29,7 +29,7 @@ const int LEVEL_HEIGHT = 1500;
 /*! Ball implementation
  */
 Ball::Ball()
-  : SbObject(50, 300, 25, 25)
+  : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.92*LEVEL_HEIGHT), 25, 25)
 {
   //  bounding_box_ = {};
   velocity_y_ = 0;
@@ -58,6 +58,49 @@ Ball::center_camera(SDL_Rect& camera)
 }
 
 
+SbHitPosition
+Ball::check_hit(const std::unique_ptr<Tile>& tile)
+{
+  SbHitPosition result = SbHitPosition::none;
+  const SDL_Rect& hit_box = tile->bounding_rect();
+  bool in_xrange = false, in_yrange = false, x_hit_left = false, x_hit_right = false, y_hit_top = false, y_hit_bottom = false ;
+
+  if ( bounding_rect_.x + bounding_rect_.w/2 >= hit_box.x &&
+       bounding_rect_.x + bounding_rect_.w/2 <= hit_box.x + hit_box.w )
+    in_xrange = true;
+      
+  if ( bounding_rect_.y + bounding_rect_.h/2 >= hit_box.y  &&
+       bounding_rect_.y + bounding_rect_.h/2 <= hit_box.y + hit_box.h)
+     in_yrange = true;
+
+  if ( bounding_rect_.x + bounding_rect_.w >= hit_box.x               &&
+       bounding_rect_.x                   <= hit_box.x + hit_box.w ) {
+    if ( bounding_rect_.x > hit_box.x ) 
+      x_hit_right = true;
+    else if ( bounding_rect_.x + bounding_rect_.w < hit_box.x + hit_box.w)
+      x_hit_left = true;
+  }
+  if ( bounding_rect_.y + bounding_rect_.h >= hit_box.y               &&
+       bounding_rect_.y                   <= hit_box.y + hit_box.h ) {
+    if ( bounding_rect_.y > hit_box.y ) 
+      y_hit_bottom = true;
+    else if ( bounding_rect_.y + bounding_rect_.h < hit_box.y + hit_box.h )
+      y_hit_top = true;
+  }
+  
+  if ( x_hit_left && in_yrange ) 
+    result = SbHitPosition::left;
+  else if (x_hit_right && in_yrange)
+    result = SbHitPosition::right;
+  else if (y_hit_top && in_xrange)
+    result = SbHitPosition::top;
+  else if (y_hit_bottom && in_xrange)
+    result = SbHitPosition::bottom;
+  return result;
+}
+
+
+
 void
 Ball::handle_event(const SDL_Event& event)
 {
@@ -76,8 +119,9 @@ Ball::handle_event(const SDL_Event& event)
 
 
 
+
 int
-Ball::move()
+Ball::move(const std::vector<std::unique_ptr<Tile>>& level)
 {
   int result = 0;
   Uint32 deltaT = timer_.get_time();
@@ -85,7 +129,38 @@ Ball::move()
   int y_velocity = (int)( window->height() * velocity_y_ * deltaT);  
   bounding_rect_.y += y_velocity;
   bounding_rect_.x += x_velocity;
-  
+
+  int hits = 0 ;   // can only hit max 2 tiles at once
+  for (auto& tile: level){
+    SbHitPosition hit = check_hit(tile);
+    if ( hit == SbHitPosition::none )
+      continue;
+    else {
+      ++hits;
+      switch (hit) {
+      case SbHitPosition::left :
+	if (velocity_x_ > 0 )
+	  velocity_x_ *= -1*momentum_loss_;  
+	break;
+      case SbHitPosition::right :
+	if (velocity_x_ < 0 )
+	  velocity_x_ *= -1*momentum_loss_;  
+	break;
+      case SbHitPosition::top :
+	if (velocity_y_ > 0 )
+	  velocity_y_ *= -1*momentum_loss_;  
+	break;
+      case SbHitPosition::bottom :
+	if (velocity_y_ < 0 )
+	  velocity_y_ *= -1*momentum_loss_;  
+	break;
+      }
+      if ( hits == 2 )
+	break;
+    }
+  }
+
+ 
   if (bounding_rect_.x <= 0) {
     if ( velocity_x_ < 0 ) velocity_x_ *= -1*momentum_loss_;  
   }
@@ -127,7 +202,7 @@ Ball::resetball(Uint32 interval, void *param )
 Tile::Tile(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
-  SDL_Color color = {100, 10, 200, 0};
+  SDL_Color color = {40, 40, 160, 0};
   texture_ = new SbTexture();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
   name_ = "tile";
@@ -154,7 +229,7 @@ std::vector<std::unique_ptr<Tile>>
 create_level()
 {
   std::vector<std::unique_ptr<Tile>> result;
-  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}};
+  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}, {0.45,0.45,0.1,0.1}};
   for (unsigned int i = 0; i < coords.size() ; ++i ){
     int x = coords.at(i).at(0)*LEVEL_WIDTH;
     int y = coords.at(i).at(1)*LEVEL_HEIGHT;
@@ -203,7 +278,7 @@ int main()
 	ball.handle_event(event);
 
       }
-      ball.move();
+      ball.move(level);
       ball.center_camera(camera);
       fps_display.update();
       

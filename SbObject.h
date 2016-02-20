@@ -17,6 +17,11 @@
 class SbTexture;
 class SbWindow;
 
+enum class SbHitPosition {
+  none, top, bottom, left, right
+    };
+
+
 class SbObject
 {
 public:
@@ -32,12 +37,11 @@ public:
 static SbWindow* window;
 
   virtual void handle_event(const SDL_Event& event);
-  virtual int move( std::vector<SbObject*> objects_to_hit );
   virtual int move( );
   virtual void render() ;
   virtual void render(const SDL_Rect &camera);
   std::array<double,4> bounding_box() { return bounding_box_;};
-  SDL_Rect bounding_rect() {return bounding_rect_;}
+  SDL_Rect bounding_rect() const {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
   bool is_inside(int x, int y);
   void move_bounding_box();

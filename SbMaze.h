@@ -17,6 +17,8 @@ author: Ulrike Hager
 
 
 class Ball;
+class Tile;
+
 
 
 class Ball : public SbObject
@@ -25,11 +27,12 @@ public:
   Ball();
 
   void center_camera(SDL_Rect& camera);
+  SbHitPosition check_hit(const std::unique_ptr<Tile>& tile);
   void handle_event(const SDL_Event& event);
   /*! \retval 1 if ball in goal
     \retval 0 else
    */
-  int move();
+  int move(const std::vector<std::unique_ptr<Tile>>& level);
   //  void render();
   /*! Reset after goal.
    */

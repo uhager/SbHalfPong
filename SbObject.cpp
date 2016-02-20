@@ -75,17 +75,6 @@ SbObject::is_inside(int x, int y)
 
 
 int
-SbObject::move( std::vector<SbObject*> objects_to_hit )
-{
-#ifdef DEBUG
-  std::cout << "[SbObject::move]" << std::endl;
-#endif
-  return 0;
-}
-
-
-
-int
 SbObject::move( )
 {
 #ifdef DEBUG
