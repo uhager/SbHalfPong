@@ -45,6 +45,48 @@ SbObject::~SbObject()
 
 
 
+SbHitPosition
+SbObject::check_hit(const SbObject& toHit)
+{
+  SbHitPosition result = SbHitPosition::none;
+  const SDL_Rect& hit_box = toHit.bounding_rect();
+  bool in_xrange = false, in_yrange = false, x_hit_left = false, x_hit_right = false, y_hit_top = false, y_hit_bottom = false ;
+
+  if ( bounding_rect_.x + bounding_rect_.w/2 >= hit_box.x &&
+       bounding_rect_.x + bounding_rect_.w/2 <= hit_box.x + hit_box.w )
+    in_xrange = true;
+      
+  if ( bounding_rect_.y + bounding_rect_.h/2 >= hit_box.y  &&
+       bounding_rect_.y + bounding_rect_.h/2 <= hit_box.y + hit_box.h)
+     in_yrange = true;
+
+  if ( bounding_rect_.x + bounding_rect_.w >= hit_box.x               &&
+       bounding_rect_.x                   <= hit_box.x + hit_box.w ) {
+    if ( bounding_rect_.x > hit_box.x ) 
+      x_hit_right = true;
+    else if ( bounding_rect_.x + bounding_rect_.w < hit_box.x + hit_box.w)
+      x_hit_left = true;
+  }
+  if ( bounding_rect_.y + bounding_rect_.h >= hit_box.y               &&
+       bounding_rect_.y                   <= hit_box.y + hit_box.h ) {
+    if ( bounding_rect_.y > hit_box.y ) 
+      y_hit_bottom = true;
+    else if ( bounding_rect_.y + bounding_rect_.h < hit_box.y + hit_box.h )
+      y_hit_top = true;
+  }
+  
+  if ( x_hit_left && in_yrange ) 
+    result = SbHitPosition::left;
+  else if (x_hit_right && in_yrange)
+    result = SbHitPosition::right;
+  else if (y_hit_top && in_xrange)
+    result = SbHitPosition::top;
+  else if (y_hit_bottom && in_xrange)
+    result = SbHitPosition::bottom;
+  return result;
+}
+
+
 
 void
 SbObject::handle_event(const SDL_Event& event)

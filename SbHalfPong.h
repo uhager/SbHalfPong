@@ -99,7 +99,7 @@ class GameOver : public SbMessage
 class HighScore : public SbMessage
 {
  public:
-  HighScore(TTF_Font *font, std::string filename = "save");
+  HighScore(TTF_Font *font, std::string filename = "halfpong.save");
   void new_highscore( int score );
   void old_highscore( int score );
   int read_highscore();

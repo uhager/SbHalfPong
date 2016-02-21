@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <array>
+#include <memory>
 
 #include <SDL2/SDL.h>
 
@@ -36,7 +37,8 @@ public:
 
 static SbWindow* window;
 
-  virtual void handle_event(const SDL_Event& event);
+ SbHitPosition check_hit(const SbObject& toHit);
+ virtual void handle_event(const SDL_Event& event);
   virtual int move( );
   virtual void render() ;
   virtual void render(const SDL_Rect &camera);

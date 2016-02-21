@@ -58,44 +58,19 @@ Ball::center_camera(SDL_Rect& camera)
 }
 
 
-SbHitPosition
-Ball::check_hit(const std::unique_ptr<Tile>& tile)
+
+bool
+Ball::check_goal(const Goal& goal)
 {
-  SbHitPosition result = SbHitPosition::none;
-  const SDL_Rect& hit_box = tile->bounding_rect();
-  bool in_xrange = false, in_yrange = false, x_hit_left = false, x_hit_right = false, y_hit_top = false, y_hit_bottom = false ;
-
-  if ( bounding_rect_.x + bounding_rect_.w/2 >= hit_box.x &&
-       bounding_rect_.x + bounding_rect_.w/2 <= hit_box.x + hit_box.w )
-    in_xrange = true;
-      
-  if ( bounding_rect_.y + bounding_rect_.h/2 >= hit_box.y  &&
-       bounding_rect_.y + bounding_rect_.h/2 <= hit_box.y + hit_box.h)
-     in_yrange = true;
-
-  if ( bounding_rect_.x + bounding_rect_.w >= hit_box.x               &&
-       bounding_rect_.x                   <= hit_box.x + hit_box.w ) {
-    if ( bounding_rect_.x > hit_box.x ) 
-      x_hit_right = true;
-    else if ( bounding_rect_.x + bounding_rect_.w < hit_box.x + hit_box.w)
-      x_hit_left = true;
+  bool result = false;
+  SbHitPosition hit = check_hit(goal);
+  if ( hit != SbHitPosition::none ) {
+      const SDL_Rect& target = goal.bounding_rect();
+    bounding_rect_.x =  target.x + ( target.w - bounding_rect_.w ) / 2;  
+    bounding_rect_.y =  target.y + ( target.h - bounding_rect_.h ) / 2;
+    move_bounding_box();
+    result = true;
   }
-  if ( bounding_rect_.y + bounding_rect_.h >= hit_box.y               &&
-       bounding_rect_.y                   <= hit_box.y + hit_box.h ) {
-    if ( bounding_rect_.y > hit_box.y ) 
-      y_hit_bottom = true;
-    else if ( bounding_rect_.y + bounding_rect_.h < hit_box.y + hit_box.h )
-      y_hit_top = true;
-  }
-  
-  if ( x_hit_left && in_yrange ) 
-    result = SbHitPosition::left;
-  else if (x_hit_right && in_yrange)
-    result = SbHitPosition::right;
-  else if (y_hit_top && in_xrange)
-    result = SbHitPosition::top;
-  else if (y_hit_bottom && in_xrange)
-    result = SbHitPosition::bottom;
   return result;
 }
 
@@ -121,9 +96,12 @@ Ball::handle_event(const SDL_Event& event)
 
 
 int
-Ball::move(const std::vector<std::unique_ptr<Tile>>& level)
+Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 {
   int result = 0;
+  if ( goal_ ) {
+    return result;
+  }
   Uint32 deltaT = timer_.get_time();
   int x_velocity = (int)( window->width() * velocity_x_ * deltaT);
   int y_velocity = (int)( window->height() * velocity_y_ * deltaT);  
@@ -132,7 +110,7 @@ Ball::move(const std::vector<std::unique_ptr<Tile>>& level)
 
   int hits = 0 ;   // can only hit max 2 tiles at once
   for (auto& tile: level){
-    SbHitPosition hit = check_hit(tile);
+    SbHitPosition hit = check_hit(*tile);
     if ( hit == SbHitPosition::none )
       continue;
     else {
@@ -159,7 +137,6 @@ Ball::move(const std::vector<std::unique_ptr<Tile>>& level)
 	break;
     }
   }
-
  
   if (bounding_rect_.x <= 0) {
     if ( velocity_x_ < 0 ) velocity_x_ *= -1*momentum_loss_;  
@@ -184,8 +161,12 @@ Ball::move(const std::vector<std::unique_ptr<Tile>>& level)
 void
 Ball::reset()
 {
+  goal_ = 0;
   velocity_x_ = 0;
   velocity_y_ = 0;
+  bounding_rect_.x = (int)(0.9*LEVEL_WIDTH);
+  bounding_rect_.y = (int)(0.92*LEVEL_HEIGHT);
+  move_bounding_box();
   timer_.start();
 }
 
@@ -209,6 +190,17 @@ Tile::Tile(int x, int y, int width, int height)
 }
 
 
+Goal::Goal(int x, int y, int width, int height)
+  : SbObject(x, y, width, height)
+{
+  texture_ = new SbTexture();
+  texture_->from_file(window->renderer(), "resources/goal.png", bounding_rect_.w, bounding_rect_.h );
+  name_ = "goal";
+}
+
+
+
+
 
 /////  globals /////
 SbWindow* SbObject::window;
@@ -225,17 +217,17 @@ close()
 
 
 
-std::vector<std::unique_ptr<Tile>>
+std::vector<std::unique_ptr<SbObject>>
 create_level()
 {
-  std::vector<std::unique_ptr<Tile>> result;
+  std::vector<std::unique_ptr<SbObject>> result;
   std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}, {0.45,0.45,0.1,0.1}};
   for (unsigned int i = 0; i < coords.size() ; ++i ){
     int x = coords.at(i).at(0)*LEVEL_WIDTH;
     int y = coords.at(i).at(1)*LEVEL_HEIGHT;
     int w = coords.at(i).at(2)*LEVEL_WIDTH;
     int h = coords.at(i).at(3)*LEVEL_HEIGHT;
-    result.emplace_back( std::unique_ptr<Tile>(new Tile(x, y, w, h)) );
+    result.emplace_back( std::unique_ptr<SbObject>(new Tile(x, y, w, h)) );
   }
   return result;
 }
@@ -251,7 +243,8 @@ int main()
     SbObject::window = &window ;
     SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     Ball ball;
-    std::vector<std::unique_ptr<Tile>> level = create_level();
+    Goal goal((int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) );
+    std::vector<std::unique_ptr<SbObject>> level = create_level();
     
     fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
     if ( !fps_font )
@@ -280,12 +273,17 @@ int main()
       }
       ball.move(level);
       ball.center_camera(camera);
+      bool is_goal = ball.check_goal(goal);
+      if (is_goal) {
+	SDL_AddTimer(1000, Ball::resetball, &ball);
+      }
       fps_display.update();
       
       SDL_RenderClear( window.renderer() );
       for (auto& t: level)
 	t->render(camera);
       fps_display.render();
+      goal.render( camera );
       ball.render( camera );
       SDL_RenderPresent( window.renderer() );
       
