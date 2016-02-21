@@ -1,1 +1,5 @@
-Just starting to work on this. Aims to be something like Pong-ish. Not there yet, just putting it here as backup.
+Two little games using some common classes:
+
+SbHalfPong: pong-ish, but just one player against the wall.
+
+SbMaze: guide ball through level to goal.
