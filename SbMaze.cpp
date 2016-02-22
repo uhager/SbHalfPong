@@ -93,8 +93,6 @@ Ball::handle_event(const SDL_Event& event)
 
 
 
-
-
 int
 Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 {
@@ -203,6 +201,45 @@ Goal::Goal(int x, int y, int width, int height)
 
 
 
+Level::Level(int num)
+  : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
+  ,  goal_((int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) )
+{
+  create_level(level_num_);
+}
+
+
+
+void
+Level::create_level(int num)
+{
+
+  std::vector<std::vector<double>> coords;
+  if ( num == 1) {
+    coords = std::vector<std::vector<double>>{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
+    , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes
+	};
+  }
+  else
+    return;
+  for (unsigned int i = 0; i < coords.size() ; ++i ){
+    int x = coords.at(i).at(0) * width_;
+    int y = coords.at(i).at(1) * height_;
+    int w = coords.at(i).at(2) * width_;
+    int h = coords.at(i).at(3) * height_;
+    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile(x, y, w, h)) );
+  }
+}
+
+
+void
+Level::render(const SDL_Rect &camera)
+{
+  for (auto& t: tiles_)
+    t->render(camera);
+  goal_.render( camera );
+
+}
 
 
 /////  globals /////
@@ -220,24 +257,6 @@ close()
 
 
 
-std::vector<std::unique_ptr<SbObject>>
-create_level()
-{
-  std::vector<std::unique_ptr<SbObject>> result;
-  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
-    , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes
-	};
-  for (unsigned int i = 0; i < coords.size() ; ++i ){
-    int x = coords.at(i).at(0)*LEVEL_WIDTH;
-    int y = coords.at(i).at(1)*LEVEL_HEIGHT;
-    int w = coords.at(i).at(2)*LEVEL_WIDTH;
-    int h = coords.at(i).at(3)*LEVEL_HEIGHT;
-    result.emplace_back( std::unique_ptr<SbObject>(new Tile(x, y, w, h)) );
-  }
-  return result;
-}
-
-
 
 int main()
 {
@@ -248,8 +267,8 @@ int main()
     SbObject::window = &window ;
     SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     Ball ball;
-    Goal goal((int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) );
-    std::vector<std::unique_ptr<SbObject>> level = create_level();
+
+    Level level(1);
     
     fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
     if ( !fps_font )
@@ -276,19 +295,17 @@ int main()
 	ball.handle_event(event);
 
       }
-      ball.move(level);
+      ball.move(level.tiles());
       ball.center_camera(camera);
-      bool is_goal = ball.check_goal(goal);
+      bool is_goal = ball.check_goal(level.goal());
       if (is_goal) {
 	SDL_AddTimer(1000, Ball::resetball, &ball);
       }
       fps_display.update();
       
       SDL_RenderClear( window.renderer() );
-      for (auto& t: level)
-	t->render(camera);
+      level.render( camera );
       fps_display.render();
-      goal.render( camera );
       ball.render( camera );
       SDL_RenderPresent( window.renderer() );
       

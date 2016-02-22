@@ -19,7 +19,7 @@ author: Ulrike Hager
 class Ball;
 class Tile;
 class Goal;
-
+class Level;
 
 class Ball : public SbObject
 {
@@ -58,5 +58,35 @@ class Goal : public SbObject
  public:
   Goal(int x, int y, int width, int height);
 };
+
+
+
+class Level
+{
+ public:
+  Level(int num);
+  ~Level() = default;
+  
+  void create_level(int num);
+  void start_timer();
+  void reset();
+
+  Goal const& goal() const {return goal_;}
+  std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
+  unsigned width() { return width_; }
+  unsigned height() {return height_; }
+  void render(const SDL_Rect &camera);
+  unsigned level_number() { return level_num_; }
+  
+ private:
+  unsigned width_;
+  unsigned height_;
+  unsigned level_num_ = 0;
+  Goal goal_;
+  std::vector<std::unique_ptr<SbObject>> tiles_;
+  SbTimer timer_;
+  
+};
+
 
 #endif  // SBMAZE_H
