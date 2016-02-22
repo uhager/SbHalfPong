@@ -64,12 +64,12 @@ class Goal : public SbObject
 class Level
 {
  public:
-  Level(int num);
+  Level(int num, TTF_Font* font );
   ~Level() = default;
   
   void create_level(int num);
-  void start_timer();
-  void reset();
+  void start_timer(){ timer_.start(); }
+  void stop_timer(){ timer_.stop(); }
 
   Goal const& goal() const {return goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
@@ -85,8 +85,34 @@ class Level
   Goal goal_;
   std::vector<std::unique_ptr<SbObject>> tiles_;
   SbTimer timer_;
+  SbMessage time_message_;
   
 };
 
+
+
+
+class Maze
+{
+ public:
+  Maze();
+  ~Maze();
+  Maze(const Maze&)  = delete ;
+  Maze& operator=(const Maze& toCopy) = delete;
+
+  void initialize();
+  void reset();
+  static Uint32 reset_game(Uint32 interval, void *param );
+  void run();
+  SbWindow* window() {return &window_; }
+  
+ private:
+  std::unique_ptr<Ball> ball_;
+  std::unique_ptr<Level> level_ = nullptr;
+  SbWindow window_;
+  SDL_Rect camera_;
+  TTF_Font *font_;
+  std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
+};
 
 #endif  // SBMAZE_H
