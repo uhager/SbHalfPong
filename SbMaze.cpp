@@ -132,6 +132,9 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	if (velocity_y_ < 0 )
 	  velocity_y_ *= -1*momentum_loss_;  
 	break;
+      default:
+	--hits;
+	break;
       }
       if ( hits == 2 )
 	break;
@@ -221,7 +224,9 @@ std::vector<std::unique_ptr<SbObject>>
 create_level()
 {
   std::vector<std::unique_ptr<SbObject>> result;
-  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}, {0.45,0.45,0.1,0.1}};
+  std::vector<std::vector<double>> coords{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
+    , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes
+	};
   for (unsigned int i = 0; i < coords.size() ; ++i ){
     int x = coords.at(i).at(0)*LEVEL_WIDTH;
     int y = coords.at(i).at(1)*LEVEL_HEIGHT;
