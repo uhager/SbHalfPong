@@ -29,10 +29,12 @@ Uint32
 SbTimer::get_time()
 {
   Uint32 time = 0;
-  if ( started_ )
+  if ( started_ ) {
     time = SDL_GetTicks() - startTime_;
-  else
+  }
+  else {
     time = startTime_;
+  }
   return time;
 }
 

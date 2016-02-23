@@ -108,6 +108,7 @@ class Maze
  private:
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
+  bool in_goal_ = false;
   SbWindow window_;
   SDL_Rect camera_;
   TTF_Font *font_;

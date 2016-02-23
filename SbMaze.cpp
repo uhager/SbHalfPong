@@ -77,16 +77,16 @@ Ball::center_camera(SDL_Rect& camera)
 bool
 Ball::check_goal(const Goal& goal)
 {
-  bool result = false;
+  goal_ = false;
   SbHitPosition hit = check_hit(goal);
   if ( hit != SbHitPosition::none ) {
       const SDL_Rect& target = goal.bounding_rect();
     bounding_rect_.x =  target.x + ( target.w - bounding_rect_.w ) / 2;  
     bounding_rect_.y =  target.y + ( target.h - bounding_rect_.h ) / 2;
     move_bounding_box();
-    result = true;
+    goal_ = true;
   }
-  return result;
+  return goal_;
 }
 
 
@@ -177,7 +177,7 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 void
 Ball::reset()
 {
-  goal_ = 0;
+  goal_ = false;
   velocity_x_ = 0;
   velocity_y_ = 0;
   bounding_rect_.x = (int)(0.9*LEVEL_WIDTH);
@@ -257,7 +257,7 @@ Level::render(const SDL_Rect &camera)
   goal_.render( camera );
   std::stringstream strstr;
   double time = time_message_.time()/1000.0;
-  //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << time << std::endl;
+  //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << std::setprecision(3) << time << std::endl;
   strstr << std::fixed << std::setprecision(1) << time << " s" ;
   time_message_.set_text( strstr.str() );
   time_message_.render();
@@ -302,6 +302,7 @@ Maze::reset()
 {
   ball_->reset();
   level_->start_timer();
+  in_goal_ = false;
 }
 
 
@@ -337,10 +338,12 @@ Maze::run()
       }
       ball_->move(level_->tiles());
       ball_->center_camera(camera_);
-      bool is_goal = ball_->check_goal(level_->goal());
-      if (is_goal) {
-	SDL_AddTimer(2000, Maze::reset_game, this);
-	level_->stop_timer();
+      if ( !in_goal_ ) {
+	in_goal_ = ball_->check_goal(level_->goal());
+	if (in_goal_) {
+	  SDL_AddTimer(2000, Maze::reset_game, this);
+	  level_->stop_timer();
+	}
       }
       fps_display_->update();
       
