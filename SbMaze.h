@@ -68,8 +68,8 @@ class Level
   ~Level() = default;
   
   void create_level(int num);
-  void start_timer(){ timer_.start(); }
-  void stop_timer(){ timer_.stop(); }
+  void start_timer(){ time_message_.start_timer(); }
+  void stop_timer(){ time_message_.stop_timer(); }
 
   Goal const& goal() const {return goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
@@ -84,7 +84,6 @@ class Level
   unsigned level_num_ = 0;
   Goal goal_;
   std::vector<std::unique_ptr<SbObject>> tiles_;
-  SbTimer timer_;
   SbMessage time_message_;
   
 };

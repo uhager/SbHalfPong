@@ -50,8 +50,10 @@ static SbWindow* window;
   std::string name(){return name_;}
   std::ostream& print_dimensions(std::ostream& os); 
   void start_timer() {timer_.start();}
+  void stop_timer() {timer_.start();}
   void set_color( int red, int green, int blue );
   Uint32 time() {return timer_.get_time();}
+  bool timer_started() { return timer_.started(); }
   virtual void was_hit();
   int width() const { return bounding_rect_.w;}
   int height() const { return bounding_rect_.h;}

@@ -256,7 +256,9 @@ Level::render(const SDL_Rect &camera)
     t->render(camera);
   goal_.render( camera );
   std::stringstream strstr;
-  strstr << std::fixed << std::setprecision(1) << ( timer_.get_time()/1000.0 ) << " s" ;
+  double time = time_message_.time()/1000.0;
+  //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << time << std::endl;
+  strstr << std::fixed << std::setprecision(1) << time << " s" ;
   time_message_.set_text( strstr.str() );
   time_message_.render();
 }
@@ -280,7 +282,6 @@ Maze::~Maze()
 }
 
 
-
 void
 Maze::initialize()
 {
@@ -294,7 +295,6 @@ Maze::initialize()
   level_ = std::unique_ptr<Level>( new Level(1, font_) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
 }
-
 
 
 void
@@ -311,7 +311,6 @@ Maze::reset_game(Uint32 interval, void *param )
   ((Maze*)param)->reset();
   return(0);
 }
-
 
 
 void
@@ -353,8 +352,6 @@ Maze::run()
 
     }
 }
-
-
 
 
 
