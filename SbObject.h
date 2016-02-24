@@ -23,6 +23,20 @@ enum class SbHitPosition {
     };
 
 
+struct SbRectangle
+{
+  SbRectangle(double xn, double yn, double wn, double hn)
+  : x(xn), y(yn), w(wn), h(hn)
+  {}
+  SbRectangle() = default;
+  double x = 0;
+  double y = 0;
+  double w = 0;
+  double h = 0;
+};
+
+
+  
 class SbObject
 {
 public:
@@ -42,7 +56,7 @@ static SbWindow* window;
   virtual int move( );
   virtual void render() ;
   virtual void render(const SDL_Rect &camera);
-  std::array<double,4> bounding_box() { return bounding_box_;};
+  SbRectangle bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() const {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
   bool is_inside(int x, int y);
@@ -63,7 +77,7 @@ static SbWindow* window;
 protected:
   SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;
   //! location and size in terms of window width and height
-  std::array<double,4> bounding_box_ = { {0.5, 0.5, 0.05, 0.05} };
+  SbRectangle bounding_box_ = {0.5, 0.5, 0.05, 0.05} ;
   /*! velocities are in ms to the screen. so smaller is actually faster. Should maybe rename that...
    */
   double velocity_y_ = 0;

@@ -177,8 +177,8 @@ Ball::create_sparks()
     double x = distr_position(generator_);
     double y = distr_position(generator_);
     double d = distr_size(generator_);
-    x += ( bounding_box_[0] + bounding_box_[2]/2);
-    y += ( bounding_box_[1] + bounding_box_[3]/2);
+    x += ( bounding_box_.x + bounding_box_.w/2);
+    y += ( bounding_box_.y + bounding_box_.h/2);
     Spark toAdd(x, y, d, d);
     toAdd.index_ = i;
     toAdd.set_texture( texture_ );

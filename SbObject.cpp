@@ -17,10 +17,10 @@ SbObject::SbObject(int x, int y, int width, int height)
 {
   texture_ = new SbTexture();
   bounding_rect_ = {x,y,width, height};
-  bounding_box_[0] = double(bounding_rect_.x)/window->width();
-  bounding_box_[1] = double(bounding_rect_.y)/window->height();
-  bounding_box_[2] = double(bounding_rect_.w)/window->width();
-  bounding_box_[3] = double(bounding_rect_.h)/window->height();
+  bounding_box_ = { double(bounding_rect_.x)/window->width()
+		    , double(bounding_rect_.y)/window->height()
+		    , double(bounding_rect_.w)/window->width()
+		    , double(bounding_rect_.h)/window->height() };
 }
 
 
@@ -96,10 +96,10 @@ SbObject::handle_event(const SDL_Event& event)
    // velocity_x_ = static_cast<int>(scale[0] * velocity_x_);
     // velocity_y_ = static_cast<int>(scale[1] * velocity_y_);;
     // velocity_  = static_cast<int>( (scale[0] + scale[1]) * velocity_);;
-    bounding_rect_.x = static_cast<int>(window->width() * bounding_box_[0]);
-    bounding_rect_.y = static_cast<int>(window->height() * bounding_box_[1]);
-    bounding_rect_.w = static_cast<int>(window->width() * bounding_box_[2]); 
-    bounding_rect_.h = static_cast<int>(window->height() * bounding_box_[3]); 
+    bounding_rect_.x = static_cast<int>(window->width() * bounding_box_.x);
+    bounding_rect_.y = static_cast<int>(window->height() * bounding_box_.y);
+    bounding_rect_.w = static_cast<int>(window->width() * bounding_box_.w); 
+    bounding_rect_.h = static_cast<int>(window->height() * bounding_box_.h); 
   }
 }
 
@@ -130,8 +130,8 @@ SbObject::move( )
 void
 SbObject::move_bounding_box()
 {
-  bounding_box_[0] = double(bounding_rect_.x) / window->width();
-  bounding_box_[1] = double(bounding_rect_.y) / window->height();
+  bounding_box_.x = double(bounding_rect_.x) / window->width();
+  bounding_box_.y = double(bounding_rect_.y) / window->height();
 }
   
 
@@ -140,8 +140,8 @@ std::ostream&
 SbObject::print_dimensions(std::ostream& os)
 {
   os << "window = " << window->height() << "x" << window->width()
-     << " bounding box: " << bounding_box_[0] << "," << bounding_box_[1]
-     << " - " << bounding_box_[2] << "x" << bounding_box_[3]
+     << " bounding box: " << bounding_box_.x << "," << bounding_box_.y
+     << " - " << bounding_box_.w << "x" << bounding_box_.h
      << " ;bounding rect: " << bounding_rect_.x << "," << bounding_rect_.y
      << " - "  << bounding_rect_.w << "x" << bounding_rect_.h;
   return os;
