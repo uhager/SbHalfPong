@@ -38,7 +38,7 @@ public:
   void set_momentum_loss(double ml) {momentum_loss_ = ml;}
   
 private:
-  int goal_ = 0;
+  bool goal_ = false;
   //!  momentum lost in collision = (1-momentum_loss_) * momentum before collision
   double momentum_loss_ = 0.95;
 };
@@ -49,6 +49,7 @@ class Tile : public SbObject
 {
  public:
   Tile(int x, int y, int width, int height);
+  Tile( SbRectangle bounding_box );
 };
 
 
@@ -71,7 +72,7 @@ class Level
   void start_timer(){ time_message_.start_timer(); }
   void stop_timer(){ time_message_.stop_timer(); }
 
-  Goal const& goal() const {return goal_;}
+  Goal const& goal() const {return *goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
   unsigned width() { return width_; }
   unsigned height() {return height_; }
@@ -82,7 +83,7 @@ class Level
   unsigned width_;
   unsigned height_;
   unsigned level_num_ = 0;
-  Goal goal_;
+  std::unique_ptr<Goal> goal_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> tiles_;
   SbMessage time_message_;
   

@@ -37,6 +37,18 @@ SbObject::SbObject(double x, double y, double width, double height)
 
 
 
+SbObject::SbObject( SbRectangle bounding_box)
+  : bounding_box_(bounding_box)
+{
+  texture_ = new SbTexture();
+  bounding_rect_.x = static_cast<int>(bounding_box_.x * window->width() );
+  bounding_rect_.y = static_cast<int>(bounding_box_.y * window->height() );
+  bounding_rect_.w = static_cast<int>(bounding_box_.w * window->width() );
+  bounding_rect_.h = static_cast<int>(bounding_box_.h * window->height() );
+}
+
+
+  
 SbObject::~SbObject()
 {
   delete texture_;

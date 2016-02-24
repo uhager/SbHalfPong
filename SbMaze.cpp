@@ -206,6 +206,17 @@ Tile::Tile(int x, int y, int width, int height)
 }
 
 
+Tile::Tile( SbRectangle bounding_box )
+  : SbObject( bounding_box)
+{
+  SDL_Color color = {40, 40, 160, 0};
+  texture_ = new SbTexture();
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
+  name_ = "tile";
+}
+
+
+
 Goal::Goal(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
@@ -218,7 +229,6 @@ Goal::Goal(int x, int y, int width, int height)
 
 Level::Level(int num, TTF_Font* font)
   : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
-  ,  goal_((int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) )
   , time_message_(0.9,0,0.1,0.07)
 {
   create_level(level_num_);
@@ -231,22 +241,24 @@ void
 Level::create_level(int num)
 {
 
-  std::vector<std::vector<double>> coords;
+  std::vector< SbRectangle > coords;
   if ( num == 1) {
-    coords = std::vector<std::vector<double>>{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
+    coords = std::vector<SbRectangle>{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
     , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes 
 					      , { 0.85, 0.4, 0.03, 0.53 }					      
 	};
   }
   else
     return;
-  for (unsigned int i = 0; i < coords.size() ; ++i ){
-    int x = coords.at(i).at(0) * width_;
-    int y = coords.at(i).at(1) * height_;
-    int w = coords.at(i).at(2) * width_;
-    int h = coords.at(i).at(3) * height_;
-    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile(x, y, w, h)) );
+  for ( auto box: coords ){
+    int x = box.x * width_;
+    int y = box.y * height_;
+    int w = box.w * width_;
+    int h = box.h * height_;
+    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
   }
+
+  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) } );
 }
 
 
@@ -255,7 +267,7 @@ Level::render(const SDL_Rect &camera)
 {
   for (auto& t: tiles_)
     t->render(camera);
-  goal_.render( camera );
+  goal_->render( camera );
   std::stringstream strstr;
   double time = time_message_.time()/1000.0;
   //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << std::setprecision(3) << time << std::endl;

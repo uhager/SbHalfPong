@@ -43,6 +43,7 @@ public:
   SbObject() = default;
   SbObject(int x, int y, int width, int height);
   SbObject(double x, double y, double width, double height);
+  SbObject( SbRectangle bounding_box);
   /* SbObject(SbObject&& toMove) */
   /*   : texture_(toMove.texture_) */
   /*   {} */
