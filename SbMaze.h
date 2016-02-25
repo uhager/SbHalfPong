@@ -91,7 +91,6 @@ class Level
 
 
 
-
 class Maze
 {
  public:
@@ -115,5 +114,33 @@ class Maze
   TTF_Font *font_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
 };
+
+
+struct LevelCoordinates
+{
+  LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g)
+  : tiles(t),goal(g)
+  {}
+  std::vector<SbRectangle> tiles;
+  SbRectangle goal;
+};
+
+
+////////////////////
+////// levels //////
+////////////////////
+std::vector<LevelCoordinates> levels;
+
+std::vector<SbRectangle> lev1 = {{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  /* outer boxes */
+				 , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    /* central boxes */ 
+				 ,{ 0.85, 0.4, 0.03, 0.53 }	/* barrier next to goal*/				      
+	};
+SbRectangle goal1 = {0.4, 0.48, 0.03, 0.03};
+
+////////////////////
+//// levels end ////
+////////////////////
+
+
 
 #endif  // SBMAZE_H

@@ -27,19 +27,10 @@ const int SCREEN_HEIGHT = 600;
 const int LEVEL_WIDTH = 2000;
 const int LEVEL_HEIGHT = 1500;
 
+
+
 /////  globals /////
 SbWindow* SbObject::window;
-TTF_Font *fps_font = nullptr;
-
-
-void
-close()
-{
-  TTF_CloseFont( fps_font );
-  fps_font = nullptr;
-  TTF_Quit();
-}
-
 
 /*! Ball implementation
  */
@@ -241,7 +232,10 @@ void
 Level::create_level(int num)
 {
 
-  std::vector< SbRectangle > coords;
+  if (num > levels.size() )
+    throw std::runtime_error("[Level::create_level] No level found for level number = " + std::to_string(num)  );
+  std::vector< SbRectangle > &coords = (levels.at(num).tiles);
+  /*
   if ( num == 1) {
     coords = std::vector<SbRectangle>{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
     , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes 
@@ -250,6 +244,8 @@ Level::create_level(int num)
   }
   else
     return;
+  */
+
   for ( auto box: coords ){
     int x = box.x * width_;
     int y = box.y * height_;
@@ -257,8 +253,8 @@ Level::create_level(int num)
     int h = box.h * height_;
     tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
   }
-
-  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(0.4*LEVEL_WIDTH), (int)(0.48*LEVEL_HEIGHT), (int)(0.03*LEVEL_WIDTH), (int)(0.03*LEVEL_WIDTH) } );
+SbRectangle& goal = levels.at(num).goal;
+  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
 }
 
 
@@ -282,6 +278,8 @@ Maze::Maze()
 {
   window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
   SbObject::window = &window_ ;
+  levels.emplace_back(lev1, goal1);
+
   initialize();
 
 }
@@ -305,7 +303,7 @@ Maze::initialize()
     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
   ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(1, font_) );
+  level_ = std::unique_ptr<Level>( new Level(0, font_) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
 }
 
