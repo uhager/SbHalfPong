@@ -60,7 +60,7 @@ SbFpsDisplay::handle_event(const SDL_Event& event)
 
 
 void
-SbFpsDisplay::set_number_frames( unsigned int n )
+SbFpsDisplay::set_number_frames( uint32_t n )
 {
   n_frames_ = n;
   while ( times_.size() > n_frames_ ) {

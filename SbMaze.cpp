@@ -230,7 +230,7 @@ Level::Level(int num, TTF_Font* font)
 
 
 void
-Level::create_level(unsigned num)
+Level::create_level(uint32_t num)
 {
   if ( !tiles_.empty() )
     tiles_.clear();

@@ -34,11 +34,11 @@ class SbFpsDisplay : public SbMessage
  public:
   SbFpsDisplay(TTF_Font *font, double x = 0, double y = 0, double width = 0.06, double height= 0.035);
   void handle_event(const SDL_Event& event) override;
-  void set_number_frames( unsigned int n );
+  void set_number_frames( uint32_t n );
   void update();
   
  private:
-  unsigned int n_frames_ = 250;
+  uint32_t n_frames_ = 250;
   double sum_ = 0;
   std::deque<double> times_;
   

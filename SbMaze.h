@@ -68,21 +68,21 @@ class Level
   Level(int num, TTF_Font* font );
   ~Level() = default;
   
-  void create_level(unsigned num);
+  void create_level(uint32_t num);
   void start_timer(){ time_message_.start_timer(); }
   void stop_timer(){ time_message_.stop_timer(); }
 
   Goal const& goal() const {return *goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
-  unsigned width() { return width_; }
-  unsigned height() {return height_; }
+  uint32_t width() { return width_; }
+  uint32_t height() {return height_; }
   void render(const SDL_Rect &camera);
-  unsigned level_number() { return level_num_; }
+  uint32_t level_number() { return level_num_; }
   
  private:
-  unsigned width_;
-  unsigned height_;
-  unsigned level_num_ = 0;
+  uint32_t width_;
+  uint32_t height_;
+  uint32_t level_num_ = 0;
   std::unique_ptr<Goal> goal_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> tiles_;
   SbMessage time_message_;
@@ -109,7 +109,7 @@ class Maze
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
   bool in_goal_ = false;
-  unsigned current_level_ = 0;
+  uint32_t current_level_ = 0;
   SbWindow window_;
   SDL_Rect camera_;
   TTF_Font *font_;
