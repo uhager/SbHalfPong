@@ -8,6 +8,17 @@
 
 /*! SbTimer implementation
  */
+
+
+void
+SbTimer::reset()
+{
+  if ( started_ )
+    started_ = false;
+  startTime_ = 0;
+}
+
+
 void
 SbTimer::start()
 {

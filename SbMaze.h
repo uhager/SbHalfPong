@@ -7,7 +7,7 @@ author: Ulrike Hager
 
 
 #include <string>
-
+#include <mutex>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -68,7 +68,7 @@ class Level
   Level(int num, TTF_Font* font );
   ~Level() = default;
   
-  void create_level(int num);
+  void create_level(unsigned num);
   void start_timer(){ time_message_.start_timer(); }
   void stop_timer(){ time_message_.stop_timer(); }
 
@@ -86,7 +86,7 @@ class Level
   std::unique_ptr<Goal> goal_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> tiles_;
   SbMessage time_message_;
-  
+  std::mutex mex;
 };
 
 
@@ -109,10 +109,12 @@ class Maze
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
   bool in_goal_ = false;
+  unsigned current_level_ = 0;
   SbWindow window_;
   SDL_Rect camera_;
   TTF_Font *font_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
+  SbTimer reset_timer_;
 };
 
 
@@ -131,11 +133,17 @@ struct LevelCoordinates
 ////////////////////
 std::vector<LevelCoordinates> levels;
 
-std::vector<SbRectangle> lev1 = {{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  /* outer boxes */
+std::vector<SbRectangle> lev0 = {{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  /* outer boxes */
 				 , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    /* central boxes */ 
 				 ,{ 0.85, 0.4, 0.03, 0.53 }	/* barrier next to goal*/				      
 	};
-SbRectangle goal1 = {0.4, 0.48, 0.03, 0.03};
+SbRectangle goal0 = {0.4, 0.48, 0.03, 0.03};
+
+std::vector<SbRectangle> lev1 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.,0.03,1.0}, {0.0, 0.97, 1.0, 0.03}  /* outer boxes */
+				 , {0.15,0.85,0.18,0.03}, {0.4, 0.85, 0.52, 0.03} /* lower horiz. bars */
+				 , {0.2, 0.2, 0.03, 0.6} /* vert. bar */
+};
+SbRectangle goal1 = {0.85, 0.1, 0.03, 0.03};
 
 ////////////////////
 //// levels end ////

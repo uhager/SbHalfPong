@@ -16,6 +16,7 @@ public:
   SbTimer() = default;
   void start();
   void stop();
+  void reset();
   /*! All times in ms
    */
   Uint32 get_time();

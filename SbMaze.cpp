@@ -9,6 +9,7 @@ author: Ulrike Hager
 #include <algorithm>
 #include <memory>
 #include <iomanip>
+#include <mutex>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -229,23 +230,18 @@ Level::Level(int num, TTF_Font* font)
 
 
 void
-Level::create_level(int num)
+Level::create_level(unsigned num)
 {
-
+  if ( !tiles_.empty() )
+    tiles_.clear();
+  
   if (num > levels.size() )
     throw std::runtime_error("[Level::create_level] No level found for level number = " + std::to_string(num)  );
-  std::vector< SbRectangle > &coords = (levels.at(num).tiles);
-  /*
-  if ( num == 1) {
-    coords = std::vector<SbRectangle>{{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.05,1.0}, {0.0, 0.95, 1.0, 0.05}  // outer borders
-    , {0.45,0.45,0.1,0.1},{0.35,0.35,0.1,0.1}, {0.55,0.35,0.1,0.1}, {0.55,0.55,0.1,0.1}, {0.35,0.55,0.1,0.1}    // central boxes 
-					      , { 0.85, 0.4, 0.03, 0.53 }					      
-	};
-  }
-  else
-    return;
-  */
 
+  std::vector< SbRectangle > &coords = (levels.at(num).tiles);
+  SbRectangle& goal = levels.at(num).goal;
+
+  std::lock_guard<std::mutex> lk(mex);
   for ( auto box: coords ){
     int x = box.x * width_;
     int y = box.y * height_;
@@ -253,7 +249,6 @@ Level::create_level(int num)
     int h = box.h * height_;
     tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
   }
-SbRectangle& goal = levels.at(num).goal;
   goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
 }
 
@@ -261,9 +256,9 @@ SbRectangle& goal = levels.at(num).goal;
 void
 Level::render(const SDL_Rect &camera)
 {
-  for (auto& t: tiles_)
-    t->render(camera);
-  goal_->render( camera );
+    for (auto& t: tiles_)
+      t->render(camera);
+    goal_->render( camera );
   std::stringstream strstr;
   double time = time_message_.time()/1000.0;
   //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << std::setprecision(3) << time << std::endl;
@@ -278,6 +273,7 @@ Maze::Maze()
 {
   window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
   SbObject::window = &window_ ;
+  levels.emplace_back(lev0, goal0);
   levels.emplace_back(lev1, goal1);
 
   initialize();
@@ -303,7 +299,7 @@ Maze::initialize()
     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
   ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(0, font_) );
+  level_ = std::unique_ptr<Level>( new Level(current_level_, font_) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
 }
 
@@ -311,8 +307,13 @@ Maze::initialize()
 void
 Maze::reset()
 {
+  if ( (++current_level_) == levels.size() ) {
+    current_level_ = 0;
+  }
+  level_->create_level( current_level_ );
   ball_->reset();
   level_->start_timer();
+  reset_timer_.reset();
   in_goal_ = false;
 }
 
@@ -334,6 +335,7 @@ Maze::run()
     level_->start_timer();
     
     while (!quit) {
+      /// begin event polling
       while( SDL_PollEvent( &event ) ) {
 	if (event.type == SDL_QUIT) quit = true;
 	else if (event.type == SDL_KEYDOWN ) {
@@ -345,14 +347,20 @@ Maze::run()
 	}
 	window_.handle_event(event);
 	ball_->handle_event(event);
-
       }
+      /// end event polling
+
+      	if ( reset_timer_.get_time() > 1500 )
+	  reset();
+	
+
       ball_->move(level_->tiles());
       ball_->center_camera(camera_);
       if ( !in_goal_ ) {
 	in_goal_ = ball_->check_goal(level_->goal());
 	if (in_goal_) {
-	  SDL_AddTimer(2000, Maze::reset_game, this);
+	  //	  SDL_AddTimer(2000, Maze::reset_game, this);
+	  reset_timer_.start();
 	  level_->stop_timer();
 	}
       }
