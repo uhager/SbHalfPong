@@ -7,7 +7,6 @@ author: Ulrike Hager
 
 
 #include <string>
-#include <mutex>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -86,7 +85,6 @@ class Level
   std::unique_ptr<Goal> goal_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> tiles_;
   SbMessage time_message_;
-  std::mutex mex;
 };
 
 

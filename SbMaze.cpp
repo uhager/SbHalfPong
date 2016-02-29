@@ -51,8 +51,10 @@ Ball::Ball()
 void
 Ball::center_camera(SDL_Rect& camera) 
 {
-  camera.x = pos_x() + width()/2 - window->width()/2;
-  camera.y = pos_y() + height()/2 - window->height()/2;
+  camera.w = window->width();
+  camera.h = window->height();
+  camera.x = pos_x() + width()/2 - camera.w/2;
+  camera.y = pos_y() + height()/2 - camera.h/2;
   if ( camera.x < 0 )
       camera.x = 0;
   else if ( camera.x > LEVEL_WIDTH - camera.w )
@@ -86,8 +88,6 @@ Ball::check_goal(const Goal& goal)
 void
 Ball::handle_event(const SDL_Event& event)
 {
-  
-  SbObject::handle_event( event );
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
     case SDLK_UP: velocity_y_ -= velocity_; break;
@@ -145,7 +145,7 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	break;
     }
   }
- 
+  /*
   if (bounding_rect_.x <= 0) {
     if ( velocity_x_ < 0 ) velocity_x_ *= -1*momentum_loss_;  
   }
@@ -158,7 +158,7 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
   else if ( bounding_rect_.y + bounding_rect_.h >= LEVEL_HEIGHT ) {
     if ( velocity_y_ > 0 ) velocity_y_ *= -1*momentum_loss_;
   }
- 
+  */
   move_bounding_box();
   timer_.start();
   return result;
@@ -228,7 +228,6 @@ Level::Level(int num, TTF_Font* font)
 }
 
 
-
 void
 Level::create_level(uint32_t num)
 {
@@ -241,8 +240,7 @@ Level::create_level(uint32_t num)
   std::vector< SbRectangle > &coords = (levels.at(num).tiles);
   SbRectangle& goal = levels.at(num).goal;
 
-  std::lock_guard<std::mutex> lk(mex);
-  for ( auto box: coords ){
+   for ( auto box: coords ){
     int x = box.x * width_;
     int y = box.y * height_;
     int w = box.w * width_;
@@ -251,6 +249,7 @@ Level::create_level(uint32_t num)
   }
   goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
 }
+
 
 
 void
