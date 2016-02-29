@@ -71,7 +71,8 @@ class Level
   void create_level(uint32_t num);
   void start_timer(){ time_message_.start_timer(); }
   void stop_timer(){ time_message_.stop_timer(); }
-
+  Uint32 time() { return time_message_.time(); }
+    
   Goal const& goal() const {return *goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
   uint32_t width() { return width_; }
@@ -90,6 +91,21 @@ class Level
 };
 
 
+class HighScore : public SbMessage
+{
+ public:
+  HighScore(TTF_Font *font, std::string filename = "maze.save");
+  bool check_highscore(uint32_t level, Uint32 score);
+  std::vector<Uint32> highscores() { return highscores_; }
+  void write_highscores( );
+  std::vector<Uint32> read_highscores( );
+  void write_highscore();
+
+ private:
+  std::vector<Uint32> highscores_;
+  std::string savefile_;
+};
+
 
 class Maze
 {
@@ -106,6 +122,7 @@ class Maze
   SbWindow* window() {return &window_; }
   
  private:
+
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
   bool in_goal_ = false;
@@ -115,6 +132,7 @@ class Maze
   TTF_Font *font_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;
+  std::unique_ptr<HighScore> highscore_ = nullptr;
 };
 
 

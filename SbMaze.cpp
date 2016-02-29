@@ -9,7 +9,7 @@ author: Ulrike Hager
 #include <algorithm>
 #include <memory>
 #include <iomanip>
-#include <mutex>
+#include <iterator>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -271,6 +271,78 @@ Level::render(const SDL_Rect &camera)
 
 
 
+HighScore::HighScore(TTF_Font *font, std::string filename)
+  : SbMessage(0.4,0.75,0.5,0.2), savefile_(filename)
+{
+  font_ = font;
+  name_ = "gameover" ;  //!< same name to render only when game over.
+  read_highscores();
+  highscores_.push_back(0);
+}
+
+
+bool
+HighScore::check_highscore(uint32_t level, Uint32 score)
+{
+  bool result = false;
+  if ( level >= highscores_.size() ) {
+    while ( level > highscores_.size() )
+      highscores_.push_back(0);
+    highscores_.push_back( score );
+    result = true;
+  }
+  else {
+    if ( highscores_.at(level) == 0 || score < highscores_.at(level) ) {  // highscore is actually time, faster is better
+      highscores_.at(level) = score;
+      result = true;
+    }
+  }
+
+  if (result)
+    write_highscores();
+  return result;
+}
+
+
+void
+HighScore::write_highscores( )
+{
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
+  if ( !file ) {
+    throw std::runtime_error("[HighScore::write_highscores] Error: Couldn't open file " + savefile_ + ":\n" + SDL_GetError() );
+  }
+  uint32_t size = highscores_.size();
+  SDL_RWwrite( file, &size, sizeof(uint32_t), 1 );
+  for ( auto score: highscores_ ) {
+    SDL_RWwrite( file, &score, sizeof(Uint32), 1 );
+  }
+  SDL_RWclose( file );
+  std::cout << "[HighScore::write_highscores] " ;
+  std::ostream_iterator<Uint32> iter(std::cout);
+  std::copy(highscores_.begin(), highscores_.end(), iter);
+}
+
+
+std::vector<Uint32>
+HighScore::read_highscores( )
+{
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
+  if ( file ) {
+    uint32_t max = 0;
+    SDL_RWread( file, &max, sizeof(uint32_t), 1 );
+    Uint32 scores[max];
+    SDL_RWread( file, &scores, sizeof(Uint32), max );
+    highscores_.assign( &scores[0], &scores[0]+max );
+    SDL_RWclose( file );
+  }
+  std::cout << "[HighScore::read_highscores] " ;
+  std::ostream_iterator<Uint32> iter(std::cout);
+  std::copy(highscores_.begin(), highscores_.end(), iter);
+  return highscores_;
+}
+
+
+
 Maze::Maze()
 {
   window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -303,6 +375,7 @@ Maze::initialize()
   ball_ = std::unique_ptr<Ball>( new Ball );
   level_ = std::unique_ptr<Level>( new Level(current_level_, font_) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
+  highscore_ = std::unique_ptr<HighScore> (new HighScore( font_ ) );
 }
 
 
@@ -326,6 +399,7 @@ Maze::reset_game(Uint32 interval, void *param )
   ((Maze*)param)->reset();
   return(0);
 }
+
 
 
 void
@@ -366,6 +440,7 @@ Maze::run()
 	  //	  SDL_AddTimer(2000, Maze::reset_game, this);
 	  reset_timer_.start();
 	  level_->stop_timer();
+	  highscore_->check_highscore(current_level_, level_->time() );
 	}
       }
       fps_display_->update();

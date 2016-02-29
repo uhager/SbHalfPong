@@ -333,11 +333,10 @@ GameOver::GameOver(TTF_Font *font)
  */
 
 HighScore::HighScore(TTF_Font *font, std::string filename)
-  : SbMessage(0.4,0.75,0.5,0.2)
+  : SbMessage(0.4,0.75,0.5,0.2), savefile_(filename)
 {
-  name_ = "gameover" ;  //!< same name to render only when game over.
-  savefile_ = filename;
   font_ = font;
+  name_ = "gameover" ;  //!< same name to render only when game over.
 }
 
 
