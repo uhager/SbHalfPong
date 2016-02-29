@@ -251,6 +251,12 @@ Level::create_level(uint32_t num)
 }
 
 
+void
+Level::handle_event(const SDL_Event& event)
+{
+  time_message_.handle_event(event);
+}
+
 
 void
 Level::render(const SDL_Rect &camera)
@@ -346,6 +352,8 @@ Maze::run()
 	}
 	window_.handle_event(event);
 	ball_->handle_event(event);
+	level_->handle_event( event );
+	fps_display_->handle_event(event);
       }
       /// end event polling
 

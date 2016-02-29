@@ -77,6 +77,7 @@ class Level
   uint32_t height() {return height_; }
   void render(const SDL_Rect &camera);
   uint32_t level_number() { return level_num_; }
+  void handle_event(const SDL_Event& event);
   
  private:
   uint32_t width_;
