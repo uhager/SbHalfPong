@@ -39,7 +39,8 @@ public:
 private:
   bool goal_ = false;
   //!  momentum lost in collision = (1-momentum_loss_) * momentum before collision
-  double momentum_loss_ = 0.95;
+  double momentum_loss_ = 0.9;
+  double velocity_max_ = 1.0/800.0;
 };
 
 
@@ -141,6 +142,7 @@ SbRectangle goal0 = {0.4, 0.48, 0.03, 0.03};
 std::vector<SbRectangle> lev1 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.,0.03,1.0}, {0.0, 0.97, 1.0, 0.03}  /* outer boxes */
 				 , {0.15,0.85,0.18,0.03}, {0.4, 0.85, 0.52, 0.03} /* lower horiz. bars */
 				 , {0.2, 0.2, 0.03, 0.6} /* vert. bar */
+				 , {0.45, 0.6, 0.55, 0.03}   /* middle horiz. bar */
 };
 SbRectangle goal1 = {0.85, 0.1, 0.03, 0.03};
 

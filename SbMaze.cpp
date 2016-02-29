@@ -41,7 +41,7 @@ Ball::Ball()
   //  bounding_box_ = {};
   velocity_y_ = 0;
   velocity_x_ = 0;
-  velocity_ = 1.0/4000.0;
+  velocity_ = 1.0/5000.0;
   texture_ = new SbTexture();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
   name_ = "ball";
@@ -88,6 +88,16 @@ Ball::check_goal(const Goal& goal)
 void
 Ball::handle_event(const SDL_Event& event)
 {
+  const Uint8 *state = SDL_GetKeyboardState(nullptr);
+  if (state[SDL_SCANCODE_UP] && (velocity_y_ > -1*velocity_max_))
+     velocity_y_ -= velocity_;
+  if (state[SDL_SCANCODE_DOWN] && (velocity_y_ < velocity_max_))
+    velocity_y_ += velocity_;
+  if (state[SDL_SCANCODE_LEFT] && (velocity_x_ > -1*velocity_max_))
+    velocity_x_ -= velocity_;
+  if (state[SDL_SCANCODE_RIGHT] && (velocity_x_ < velocity_max_))
+    velocity_x_ += velocity_;
+    /*
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
     case SDLK_UP: velocity_y_ -= velocity_; break;
@@ -96,6 +106,7 @@ Ball::handle_event(const SDL_Event& event)
     case SDLK_RIGHT: velocity_x_ += velocity_; break;
     }
   }
+    */
 }
 
 
@@ -145,20 +156,6 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	break;
     }
   }
-  /*
-  if (bounding_rect_.x <= 0) {
-    if ( velocity_x_ < 0 ) velocity_x_ *= -1*momentum_loss_;  
-  }
-  else if ( bounding_rect_.x + bounding_rect_.w >= LEVEL_WIDTH ){
-    if ( velocity_x_ > 0 ) velocity_x_ *= -1*momentum_loss_;  
-  }
-  if ( bounding_rect_.y <= 0 ) {
-    if ( velocity_y_ < 0 ) velocity_y_ *= -1*momentum_loss_;
-  }
-  else if ( bounding_rect_.y + bounding_rect_.h >= LEVEL_HEIGHT ) {
-    if ( velocity_y_ > 0 ) velocity_y_ *= -1*momentum_loss_;
-  }
-  */
   move_bounding_box();
   timer_.start();
   return result;
