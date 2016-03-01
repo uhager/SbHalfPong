@@ -263,7 +263,6 @@ Level::render(const SDL_Rect &camera)
     goal_->render( camera );
   std::stringstream strstr;
   double time = time_message_.time()/1000.0;
-  //  std::cout << "timer " << (time_message_.timer_started()? "running " : "stopped ") << " - time: " << std::setprecision(3) << time << std::endl;
   strstr << std::fixed << std::setprecision(1) << time << " s" ;
   time_message_.set_text( strstr.str() );
   time_message_.render();
@@ -272,7 +271,7 @@ Level::render(const SDL_Rect &camera)
 
 
 HighScore::HighScore(TTF_Font *font, std::string filename)
-  : SbMessage(0.4,0.75,0.5,0.2), savefile_(filename)
+  : SbMessage(0.2,0.45,0.6,0.23), savefile_(filename)
 {
   font_ = font;
   name_ = "gameover" ;  //!< same name to render only when game over.
@@ -297,9 +296,15 @@ HighScore::check_highscore(uint32_t level, Uint32 score)
       result = true;
     }
   }
-
-  if (result)
+  std::ostringstream strstr;
+  if (result) {
     write_highscores();
+    strstr << "*** New record: " << std::fixed << std::setprecision(2) << score/1000.0 << "s ***" ; 
+  }
+  else {
+    strstr << "Your time: " << std::fixed << std::setprecision(2) << score/1000.0 << "s -- Record: " << highscores_.at(level)/ 1000.0 << "s ";
+  }
+  set_text( strstr.str() );
   return result;
 }
 
@@ -317,9 +322,9 @@ HighScore::write_highscores( )
     SDL_RWwrite( file, &score, sizeof(Uint32), 1 );
   }
   SDL_RWclose( file );
-  std::cout << "[HighScore::write_highscores] " ;
-  std::ostream_iterator<Uint32> iter(std::cout);
-  std::copy(highscores_.begin(), highscores_.end(), iter);
+  // std::cout << "[HighScore::write_highscores] " ;
+  // std::ostream_iterator<Uint32> iter(std::cout);
+  // std::copy(highscores_.begin(), highscores_.end(), iter);
 }
 
 
@@ -335,9 +340,9 @@ HighScore::read_highscores( )
     highscores_.assign( &scores[0], &scores[0]+max );
     SDL_RWclose( file );
   }
-  std::cout << "[HighScore::read_highscores] " ;
-  std::ostream_iterator<Uint32> iter(std::cout);
-  std::copy(highscores_.begin(), highscores_.end(), iter);
+  // std::cout << "[HighScore::read_highscores] " ;
+  // std::ostream_iterator<Uint32> iter(std::cout);
+  // std::copy(highscores_.begin(), highscores_.end(), iter);
   return highscores_;
 }
 
@@ -449,6 +454,8 @@ Maze::run()
       level_->render( camera_ );
       fps_display_->render();
       ball_->render( camera_ );
+      if ( reset_timer_.get_time() > 0 )
+	highscore_->render();
       SDL_RenderPresent( window_.renderer() );
 
     }
