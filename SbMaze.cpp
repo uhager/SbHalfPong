@@ -27,8 +27,7 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 const int LEVEL_WIDTH = 2000;
 const int LEVEL_HEIGHT = 1500;
-
-
+const int CONTROLLER_DEADZONE = 6000;
 
 /////  globals /////
 SbWindow* SbObject::window;
@@ -88,15 +87,53 @@ Ball::check_goal(const Goal& goal)
 void
 Ball::handle_event(const SDL_Event& event)
 {
+  double sensitivity = 1.0 ; // controller needs slower acceleration
+  ControlDir direction = ControlDir::none;
   const Uint8 *state = SDL_GetKeyboardState(nullptr);
-  if (state[SDL_SCANCODE_UP] && (velocity_y_ > -1*velocity_max_))
-     velocity_y_ -= velocity_;
-  if (state[SDL_SCANCODE_DOWN] && (velocity_y_ < velocity_max_))
-    velocity_y_ += velocity_;
-  if (state[SDL_SCANCODE_LEFT] && (velocity_x_ > -1*velocity_max_))
-    velocity_x_ -= velocity_;
-  if (state[SDL_SCANCODE_RIGHT] && (velocity_x_ < velocity_max_))
-    velocity_x_ += velocity_;
+  if (state[SDL_SCANCODE_UP] )
+    direction = ControlDir::up; //velocity_y_ -= velocity_;
+  if (state[SDL_SCANCODE_DOWN] )
+    direction = ControlDir::down; //velocity_y_ += velocity_;
+  if (state[SDL_SCANCODE_LEFT] )
+    direction = ControlDir::left; //velocity_x_ -= velocity_;
+  if (state[SDL_SCANCODE_RIGHT])
+    direction = ControlDir::right; //velocity_x_ += velocity_;
+
+  if( event.type == SDL_JOYAXISMOTION &&  event.jaxis.which == 0 ) {
+    switch ( event.jaxis.axis ) {
+    case 0: //X axis motion
+      sensitivity = 0.1;
+      if ( event.jaxis.value < -CONTROLLER_DEADZONE )
+	direction = ControlDir::left;
+      else if ( event.jaxis.value > CONTROLLER_DEADZONE )
+	direction = ControlDir::right;
+      break;
+    case 1:
+      sensitivity = 0.1;
+      if ( event.jaxis.value < -CONTROLLER_DEADZONE )
+	direction = ControlDir::up;
+      else if ( event.jaxis.value > CONTROLLER_DEADZONE )
+	direction = ControlDir::down;
+      break;
+    }
+  }
+
+  switch (direction) {
+  case ControlDir::up :
+    if (velocity_y_ > -1*velocity_max_) velocity_y_ -= ( velocity_ * sensitivity );
+    break;
+  case ControlDir::down :
+    if (velocity_y_ < velocity_max_) velocity_y_ +=  ( velocity_ * sensitivity );
+    break;
+  case ControlDir::left :
+    if (velocity_x_ > -1*velocity_max_) velocity_x_ -=  ( velocity_ * sensitivity );
+    break;
+  case ControlDir::right :
+    if (velocity_x_ < velocity_max_) velocity_x_ +=  ( velocity_ * sensitivity );
+    break;
+  default:
+    break;
+  }
     /*
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
@@ -352,6 +389,14 @@ Maze::Maze()
 {
   window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
   SbObject::window = &window_ ;
+
+  if( SDL_NumJoysticks() > 0 )  {
+    game_controller_ = SDL_JoystickOpen( 0 );
+    if( !game_controller_ ) {
+      std::cerr << "Unable to initialize game controller: " << SDL_GetError() << "\n";
+    }
+  }
+
   levels.emplace_back(lev0, goal0);
   levels.emplace_back(lev1, goal1);
 
@@ -364,6 +409,8 @@ Maze::~Maze()
 {
   TTF_CloseFont( font_ );
   font_ = nullptr;
+  SDL_JoystickClose( game_controller_ );
+  game_controller_ = nullptr;
   TTF_Quit();
 }
 

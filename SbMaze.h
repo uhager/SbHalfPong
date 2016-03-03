@@ -20,6 +20,12 @@ class Tile;
 class Goal;
 class Level;
 
+
+enum class ControlDir {
+  none, left, right, up, down
+};
+
+
 class Ball : public SbObject
 {
 public:
@@ -125,6 +131,7 @@ class Maze
 
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
+  SDL_Joystick* game_controller_ = nullptr;
   bool in_goal_ = false;
   uint32_t current_level_ = 0;
   SbWindow window_;

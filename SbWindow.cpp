@@ -22,7 +22,7 @@ SbWindow::~SbWindow()
 void
 SbWindow::initialize(std::string title, int width, int height)
 {
- if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER ) < 0 ) {
+ if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK ) < 0 ) {
     std::cerr << "SDL could not initialize! SDL_Error: " <<  SDL_GetError() << std::endl;
     exit(1);
   }
@@ -31,6 +31,13 @@ SbWindow::initialize(std::string title, int width, int height)
     SDL_Quit();
     exit(1);
   }
+  if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "2" ) ) {
+    std::cerr << "Couldn't enable anisotropic texture filtering, trying linear.\n" ;
+    if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) ) {
+      std::cerr << "Couldn't enable linear texture filtering, using nearest.\n" ;
+    }
+  }
+
   window_ = SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if( window_ == nullptr ){
     std::cerr << "Could not create window. SDL_Error: " <<  SDL_GetError()  << std::endl;
