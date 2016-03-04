@@ -131,7 +131,7 @@ class Maze
 
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
-  SDL_Joystick* game_controller_ = nullptr;
+  SDL_GameController* game_controller_ = nullptr;
   bool in_goal_ = false;
   uint32_t current_level_ = 0;
   SbWindow window_;

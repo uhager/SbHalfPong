@@ -99,6 +99,7 @@ Ball::handle_event(const SDL_Event& event)
   if (state[SDL_SCANCODE_RIGHT])
     direction = ControlDir::right; //velocity_x_ += velocity_;
 
+  /*
   if( event.type == SDL_JOYAXISMOTION &&  event.jaxis.which == 0 ) {
     switch ( event.jaxis.axis ) {
     case 0: //X axis motion
@@ -117,6 +118,26 @@ Ball::handle_event(const SDL_Event& event)
       break;
     }
   }
+  */
+  if( event.type == SDL_CONTROLLERAXISMOTION &&  event.jaxis.which == 0 ) {
+    switch ( event.jaxis.axis ) {
+    case 0: //X axis motion
+      sensitivity = 0.1;
+      if ( event.jaxis.value < -CONTROLLER_DEADZONE )
+	direction = ControlDir::left;
+      else if ( event.jaxis.value > CONTROLLER_DEADZONE )
+	direction = ControlDir::right;
+      break;
+    case 1:
+      sensitivity = 0.1;
+      if ( event.jaxis.value < -CONTROLLER_DEADZONE )
+	direction = ControlDir::up;
+      else if ( event.jaxis.value > CONTROLLER_DEADZONE )
+	direction = ControlDir::down;
+      break;
+    }
+  }
+
 
   switch (direction) {
   case ControlDir::up :
@@ -390,12 +411,21 @@ Maze::Maze()
   window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
   SbObject::window = &window_ ;
 
-  if( SDL_NumJoysticks() > 0 )  {
-    game_controller_ = SDL_JoystickOpen( 0 );
-    if( !game_controller_ ) {
-      std::cerr << "Unable to initialize game controller: " << SDL_GetError() << "\n";
+
+  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+    if (SDL_IsGameController(i)) {
+        game_controller_ = SDL_GameControllerOpen(i);
+        if (game_controller_) {
+            break;
+        }
     }
   }
+  // if( SDL_NumJoysticks() > 0 )  {
+  //   game_controller_ = SDL_JoystickOpen( 0 );
+  //   if( !game_controller_ ) {
+  //     std::cerr << "Unable to initialize game controller: " << SDL_GetError() << "\n";
+  //   }
+  // }
 
   levels.emplace_back(lev0, goal0);
   levels.emplace_back(lev1, goal1);
@@ -409,7 +439,7 @@ Maze::~Maze()
 {
   TTF_CloseFont( font_ );
   font_ = nullptr;
-  SDL_JoystickClose( game_controller_ );
+  SDL_GameControllerClose( game_controller_ );
   game_controller_ = nullptr;
   TTF_Quit();
 }
@@ -472,6 +502,11 @@ Maze::run()
 	    quit = true;
 	    break;
 	  }
+	}
+	else if (   event.type == SDL_CONTROLLERBUTTONDOWN
+		    && event.cbutton.which == 0
+		    && event.cbutton.button == SDL_CONTROLLER_BUTTON_B ) {
+	  quit = true;
 	}
 	window_.handle_event(event);
 	ball_->handle_event(event);
