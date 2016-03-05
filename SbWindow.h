@@ -36,6 +36,8 @@ class SbWindow
   bool is_fullscreen = false;
 };
 
+void sdl_init();
+void sdl_quit();
 
 
 #endif   //  SBWINDOW_H

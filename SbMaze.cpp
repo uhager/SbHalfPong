@@ -32,16 +32,26 @@ const int CONTROLLER_DEADZONE = 6000;
 /////  globals /////
 SbWindow* SbObject::window;
 
+struct DeleteFont
+{
+  void operator()(TTF_Font* font) const {
+    if ( font ) {
+      TTF_CloseFont( font );
+      font = nullptr;
+    }
+  }
+};
+
+
 /*! Ball implementation
  */
 Ball::Ball()
   : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.92*LEVEL_HEIGHT), 25, 25)
 {
-  //  bounding_box_ = {};
   velocity_y_ = 0;
   velocity_x_ = 0;
   velocity_ = 1.0/5000.0;
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
   name_ = "ball";
 }
@@ -243,11 +253,14 @@ Ball::resetball(Uint32 interval, void *param )
 }
 
 
+
+/*! Tile implementation
+ */
 Tile::Tile(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
   SDL_Color color = {40, 40, 160, 0};
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
   name_ = "tile";
 }
@@ -257,24 +270,28 @@ Tile::Tile( SbRectangle bounding_box )
   : SbObject( bounding_box)
 {
   SDL_Color color = {40, 40, 160, 0};
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
   name_ = "tile";
 }
 
 
 
+/*! Goal implementation
+ */
 Goal::Goal(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_file(window->renderer(), "resources/goal.png", bounding_rect_.w, bounding_rect_.h );
   name_ = "goal";
 }
 
 
 
-Level::Level(int num, TTF_Font* font)
+/*! Level implementation
+ */
+Level::Level(int num, std::shared_ptr<TTF_Font> font)
   : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
   , time_message_(0.9,0,0.1,0.07)
 {
@@ -328,7 +345,9 @@ Level::render(const SDL_Rect &camera)
 
 
 
-HighScore::HighScore(TTF_Font *font, std::string filename)
+/*! HighScore implementation
+ */
+HighScore::HighScore(std::shared_ptr<TTF_Font> font, std::string filename)
   : SbMessage(0.2,0.45,0.6,0.23), savefile_(filename)
 {
   font_ = font;
@@ -420,12 +439,6 @@ Maze::Maze()
         }
     }
   }
-  // if( SDL_NumJoysticks() > 0 )  {
-  //   game_controller_ = SDL_JoystickOpen( 0 );
-  //   if( !game_controller_ ) {
-  //     std::cerr << "Unable to initialize game controller: " << SDL_GetError() << "\n";
-  //   }
-  // }
 
   levels.emplace_back(lev0, goal0);
   levels.emplace_back(lev1, goal1);
@@ -437,11 +450,10 @@ Maze::Maze()
 
 Maze::~Maze()
 {
-  TTF_CloseFont( font_ );
-  font_ = nullptr;
+  // TTF_CloseFont( font_ );
+  // font_ = nullptr;
   SDL_GameControllerClose( game_controller_ );
   game_controller_ = nullptr;
-  TTF_Quit();
 }
 
 
@@ -450,7 +462,7 @@ Maze::initialize()
 {
   camera_ = { 0, 0, window_.width(), window_.height() };
   
-  font_ = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
+  font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
   if ( !font_ )
     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
@@ -547,7 +559,7 @@ Maze::run()
 
 int main()
 {
-
+  sdl_init();
   try {
     Maze maze;
     maze.run();
@@ -555,6 +567,7 @@ int main()
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;
   }
+  sdl_quit();
   return 0;
 }
   

@@ -4,7 +4,7 @@
  */
 
 #include <iostream>
-//#include <cmath>
+#include <memory>
 
 #include "SbTexture.h"
 #include "SbWindow.h"
@@ -15,7 +15,7 @@
 
 SbObject::SbObject(int x, int y, int width, int height)
 {
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   bounding_rect_ = {x,y,width, height};
   bounding_box_ = { double(bounding_rect_.x)/window->width()
 		    , double(bounding_rect_.y)/window->height()
@@ -27,7 +27,7 @@ SbObject::SbObject(int x, int y, int width, int height)
 
 SbObject::SbObject(double x, double y, double width, double height)
 {
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   bounding_box_ = {x,y,width, height};
   bounding_rect_.x = static_cast<int>(x * window->width() );
   bounding_rect_.y = static_cast<int>(y * window->height() );
@@ -40,7 +40,7 @@ SbObject::SbObject(double x, double y, double width, double height)
 SbObject::SbObject( SbRectangle bounding_box)
   : bounding_box_(bounding_box)
 {
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   bounding_rect_.x = static_cast<int>(bounding_box_.x * window->width() );
   bounding_rect_.y = static_cast<int>(bounding_box_.y * window->height() );
   bounding_rect_.w = static_cast<int>(bounding_box_.w * window->width() );
@@ -49,14 +49,6 @@ SbObject::SbObject( SbRectangle bounding_box)
 
 
   
-SbObject::~SbObject()
-{
-  delete texture_;
-  texture_ = nullptr;
-}
-
-
-
 SbHitPosition
 SbObject::check_hit(const SbObject& toHit)
 {
@@ -104,10 +96,6 @@ void
 SbObject::handle_event(const SDL_Event& event)
 {
   if ( window->new_size() ) {
-    // update bounding_box_ origin in case object moved
-   // velocity_x_ = static_cast<int>(scale[0] * velocity_x_);
-    // velocity_y_ = static_cast<int>(scale[1] * velocity_y_);;
-    // velocity_  = static_cast<int>( (scale[0] + scale[1]) * velocity_);;
     bounding_rect_.x = static_cast<int>(window->width() * bounding_box_.x);
     bounding_rect_.y = static_cast<int>(window->height() * bounding_box_.y);
     bounding_rect_.w = static_cast<int>(window->width() * bounding_box_.w); 
@@ -126,6 +114,7 @@ SbObject::is_inside(int x, int y)
     has_mouse_ = false;
   return has_mouse_;
 }
+
 
 
 int

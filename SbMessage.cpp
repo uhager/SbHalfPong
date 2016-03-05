@@ -24,19 +24,12 @@ SbMessage::set_text(std::string message)
   if ( !font_)
     throw std::runtime_error( "[SbMessage::set_text] no font. Call set_font before setting the text." );
 
-  texture_->from_text( window->renderer(), message, font_, color_);
+  texture_->from_text( window->renderer(), message, font_.get(), color_);
 }
 
 
 
-SbMessage::~SbMessage()
-{
-  font_ = nullptr;
-}
-
-
-
-SbFpsDisplay::SbFpsDisplay(TTF_Font *font, double x, double y, double width, double height)
+SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, double x, double y, double width, double height)
   : SbMessage(x,y,width,height)
 {
   name_ = "fps";

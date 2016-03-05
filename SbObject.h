@@ -44,11 +44,6 @@ public:
   SbObject(int x, int y, int width, int height);
   SbObject(double x, double y, double width, double height);
   SbObject( SbRectangle bounding_box);
-  /* SbObject(SbObject&& toMove) */
-  /*   : texture_(toMove.texture_) */
-  /*   {} */
-  /* SbObject(const SbObject& toCopy) = default; */
-  virtual ~SbObject();
 
 static SbWindow* window;
 
@@ -84,7 +79,7 @@ protected:
   double velocity_y_ = 0;
   double velocity_x_ = 0;
   double velocity_ = 0;
-  SbTexture* texture_ = nullptr;
+  std::shared_ptr<SbTexture> texture_ = nullptr;
   SDL_Color color_ = {210, 160, 10, 0};
   SbTimer timer_;
   std::string name_ = "other";

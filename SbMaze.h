@@ -71,7 +71,7 @@ class Goal : public SbObject
 class Level
 {
  public:
-  Level(int num, TTF_Font* font );
+  Level(int num, std::shared_ptr<TTF_Font> font );
   ~Level() = default;
   
   void create_level(uint32_t num);
@@ -100,7 +100,7 @@ class Level
 class HighScore : public SbMessage
 {
  public:
-  HighScore(TTF_Font *font, std::string filename = "maze.save");
+  HighScore(std::shared_ptr<TTF_Font> font, std::string filename = "maze.save");
   bool check_highscore(uint32_t level, Uint32 score);
   std::vector<Uint32> highscores() { return highscores_; }
   void write_highscores( );
@@ -129,6 +129,7 @@ class Maze
   
  private:
 
+  std::shared_ptr<TTF_Font> font_;
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
   SDL_GameController* game_controller_ = nullptr;
@@ -136,7 +137,6 @@ class Maze
   uint32_t current_level_ = 0;
   SbWindow window_;
   SDL_Rect camera_;
-  TTF_Font *font_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;
   std::unique_ptr<HighScore> highscore_ = nullptr;

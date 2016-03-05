@@ -35,7 +35,6 @@ class Ball : public SbObject
 {
 public:
   Ball();
-  //  void handle_event(const SDL_Event& event);
   /*! \retval 1 if ball in goal
     \retval 0 else
    */
@@ -69,17 +68,15 @@ class Spark : public SbObject
   friend class Ball;
 public:
   Spark(double x, double y, double width, double height);
-  ~Spark();
-
+ 
   static Uint32 expire(Uint32 interval, void* param);
-
-  void set_texture(SbTexture* tex) {texture_ = tex;}
+  
   int index() { return index_;}
   bool is_dead() {return is_dead_;}  
   Uint32 lifetime() { return lifetime_;}
 
 private:
-  //  SDL_TimerID spark_timer_;
+  void set_texture(std::shared_ptr<SbTexture> tex) {texture_ = tex;}
   int index_ = 0;
   bool is_dead_ = false;
   Uint32 lifetime_ = 100;
@@ -91,7 +88,7 @@ private:
 class GameOver : public SbMessage
 {
  public:
-  GameOver(TTF_Font *font);
+  GameOver(std::shared_ptr<TTF_Font> font);
 };
 
 
@@ -99,7 +96,7 @@ class GameOver : public SbMessage
 class HighScore : public SbMessage
 {
  public:
-  HighScore(TTF_Font *font, std::string filename = "halfpong.save");
+  HighScore(std::shared_ptr<TTF_Font> font, std::string filename = "halfpong.save");
   void new_highscore( int score );
   void old_highscore( int score );
   int read_highscore();

@@ -6,11 +6,10 @@ author: Ulrike Hager
 #include <string>
 #include <sstream>
 #include <stdexcept>
-// #include <climits>
-//#include <cmath>
 #include <random>
 #include <algorithm>
 #include <functional>
+#include <memory>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -24,8 +23,21 @@ author: Ulrike Hager
 #include "SbHalfPong.h"
 
 
+/////  globals /////
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
+
+SbWindow* SbObject::window;
+
+struct DeleteFont
+{
+  void operator()(TTF_Font* font) const {
+    if ( font ) {
+      TTF_CloseFont( font );
+      font = nullptr;
+    }
+  }
+};
 
 
 
@@ -38,7 +50,7 @@ Paddle::Paddle()
   velocity_y_ = 0;
   velocity_ = 1.0/1200.0;
   SDL_Color color = {210, 160, 10, 0};
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
   name_ = "paddle";
 }
@@ -108,17 +120,6 @@ Spark::Spark(double x, double y, double width, double height)
 
 
 
-Spark::~Spark()
-{
-#ifdef DEBUG
-  std::cout << "[Spark::~Spark] index " << index_ << " - lifetime " << lifetime_ << std::endl;  
-#endif  // DEBUG
-  texture_ = nullptr;
-  //  SDL_RemoveTimer(spark_timer_);
-}
-
-
-
 Uint32 
 Spark::expire(Uint32 interval, void* param)
 {
@@ -142,11 +143,10 @@ Spark::expire(Uint32 interval, void* param)
 Ball::Ball()
   : SbObject(50, 300, 25, 25)
 {
-  //  bounding_box_ = {};
   velocity_y_ = 1.0/1500.0;
   velocity_x_ = 1.0/1500.0;
   velocity_ = 1.0/1500.0;
-  texture_ = new SbTexture();
+  texture_ = std::make_shared<SbTexture>();
   texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
   name_ = "ball";
 }
@@ -200,7 +200,6 @@ Ball::delete_spark(int index)
 {
   std::remove_if( sparks_.begin(), sparks_.end(),
 		  [index](Spark& spark) -> bool { return spark.index() == index;} );
-  // ((Spark*)param)->set_texture( nullptr );
 }
 
 
@@ -268,7 +267,6 @@ Ball::move(const SDL_Rect& paddleBox)
 
 
 
-
 Uint32
 Ball::remove_spark(Uint32 interval, void *param, int index )
 {
@@ -317,8 +315,9 @@ Ball::resetball(Uint32 interval, void *param )
 }
 
 
-
-GameOver::GameOver(TTF_Font *font)
+/*! GameOver implementation
+ */
+GameOver::GameOver(std::shared_ptr<TTF_Font> font)
   : SbMessage(0.4,0.55,0.3,0.2)
 {
   name_ = "gameover" ;
@@ -331,8 +330,7 @@ GameOver::GameOver(TTF_Font *font)
 
 /*! HighScore implementation
  */
-
-HighScore::HighScore(TTF_Font *font, std::string filename)
+HighScore::HighScore(std::shared_ptr<TTF_Font> font, std::string filename)
   : SbMessage(0.4,0.75,0.5,0.2), savefile_(filename)
 {
   font_ = font;
@@ -393,25 +391,8 @@ HighScore::write_highscore()
 }
 
 
-
-
-/////  globals /////
-SbWindow* SbObject::window;
-TTF_Font *fps_font = nullptr;
-
-
-void
-close()
+void run()
 {
-  TTF_CloseFont( fps_font );
-  fps_font = nullptr;
-  TTF_Quit();
-}
-
-
-int main()
-{
-  try {
     SbWindow window;
     window.initialize("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
     SbObject::window = &window ;
@@ -419,7 +400,7 @@ int main()
     Paddle paddle;
     Ball ball;
     
-    fps_font = TTF_OpenFont( "resources/FreeSans.ttf", 120 );
+    std::shared_ptr<TTF_Font> fps_font = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
     if ( !fps_font )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
@@ -518,11 +499,19 @@ int main()
       SDL_RenderPresent( window.renderer() );
       ++frame_counter;  
     }
+}
+
+
+int main()
+{
+  sdl_init();
+  try {
+    run();
   }
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;
   }
-  close();
+  sdl_quit();
   return 0;
 }
   

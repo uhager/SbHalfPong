@@ -17,14 +17,12 @@ class SbMessage : public SbObject
 {
 public:
   SbMessage(double x, double y, double width, double height);
-  ~SbMessage();
 
-  void set_font(TTF_Font* font){ font_ = font;}
+  void set_font(std::shared_ptr<TTF_Font> font){ font_ = font;}
   void set_text(std::string text);
 
  protected: 
-  TTF_Font* font_ = nullptr;
-
+  std::shared_ptr<TTF_Font> font_ = nullptr;
 };
 
 
@@ -32,7 +30,7 @@ public:
 class SbFpsDisplay : public SbMessage
 {
  public:
-  SbFpsDisplay(TTF_Font *font, double x = 0, double y = 0, double width = 0.06, double height= 0.035);
+  SbFpsDisplay(std::shared_ptr<TTF_Font> font, double x = 0, double y = 0, double width = 0.06, double height= 0.035);
   void handle_event(const SDL_Event& event) override;
   void set_number_frames( uint32_t n );
   void update();

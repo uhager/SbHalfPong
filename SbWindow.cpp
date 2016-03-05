@@ -22,22 +22,6 @@ SbWindow::~SbWindow()
 void
 SbWindow::initialize(std::string title, int width, int height)
 {
- if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER ) < 0 ) {
-    std::cerr << "SDL could not initialize! SDL_Error: " <<  SDL_GetError() << std::endl;
-    exit(1);
-  }
-  if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG){
-    std::cout << "IMG_Init " << SDL_GetError();
-    SDL_Quit();
-    exit(1);
-  }
-  if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "2" ) ) {
-    std::cerr << "Couldn't enable anisotropic texture filtering, trying linear.\n" ;
-    if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) ) {
-      std::cerr << "Couldn't enable linear texture filtering, using nearest.\n" ;
-    }
-  }
-
   window_ = SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if( window_ == nullptr ){
     std::cerr << "Could not create window. SDL_Error: " <<  SDL_GetError()  << std::endl;
@@ -49,12 +33,6 @@ SbWindow::initialize(std::string title, int width, int height)
     exit(1);
   }
   SDL_SetRenderDrawColor( renderer_, 0x0, 0x0, 0x0, 0x0 );
-
-  if (TTF_Init() != 0){
-    std::cerr << "[SbWindow::initialize] Error in TTF_init: " << SDL_GetError() << std::endl;
-    SDL_Quit();
-    exit(1);
-  }
 
   width_ = width;
   height_ = height;
@@ -69,8 +47,6 @@ SbWindow::close()
   window_ = nullptr;
   renderer_ = nullptr;
 
-  IMG_Quit();
-  SDL_Quit();
 }
 
 
@@ -104,4 +80,39 @@ SbWindow::handle_event(const SDL_Event& event)
     }
     new_size_ = true;
   }
+}
+
+
+
+void sdl_init()
+{
+ if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER ) < 0 ) {
+    std::cerr << "SDL could not initialize! SDL_Error: " <<  SDL_GetError() << std::endl;
+    exit(1);
+  }
+  if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG){
+    std::cout << "IMG_Init " << SDL_GetError();
+    SDL_Quit();
+    exit(1);
+  }
+  if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "2" ) ) {
+    std::cerr << "Couldn't enable anisotropic texture filtering, trying linear.\n" ;
+    if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) ) {
+      std::cerr << "Couldn't enable linear texture filtering, using nearest.\n" ;
+    }
+  }
+
+  if (TTF_Init() != 0){
+    std::cerr << "[SbWindow::initialize] Error in TTF_init: " << SDL_GetError() << std::endl;
+    SDL_Quit();
+    exit(1);
+  }
+}
+
+
+void sdl_quit()
+{
+  IMG_Quit();
+  TTF_Quit();
+  SDL_Quit();
 }
