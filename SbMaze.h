@@ -20,7 +20,14 @@ class Tile;
 class Goal;
 class Level;
 
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+const int LEVEL_WIDTH = 2000;
+const int LEVEL_HEIGHT = 1500;
+const int CONTROLLER_DEADZONE = 6000;
+const std::string name = "Maze";
 
+  
 enum class ControlDir {
   none, left, right, up, down
 };
@@ -135,7 +142,7 @@ class Maze
   SDL_GameController* game_controller_ = nullptr;
   bool in_goal_ = false;
   uint32_t current_level_ = 0;
-  SbWindow window_;
+  SbWindow window_{name, SCREEN_WIDTH, SCREEN_HEIGHT};
   SDL_Rect camera_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;

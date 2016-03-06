@@ -393,8 +393,7 @@ HighScore::write_highscore()
 
 void run()
 {
-    SbWindow window;
-    window.initialize("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
+    SbWindow window("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
     SbObject::window = &window ;
     std::vector<SbObject*> objects;
     Paddle paddle;

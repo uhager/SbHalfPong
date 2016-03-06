@@ -23,12 +23,6 @@ author: Ulrike Hager
 #include "SbMaze.h"
 
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
-const int LEVEL_WIDTH = 2000;
-const int LEVEL_HEIGHT = 1500;
-const int CONTROLLER_DEADZONE = 6000;
-
 /////  globals /////
 SbWindow* SbObject::window;
 
@@ -427,9 +421,7 @@ HighScore::read_highscores( )
 
 Maze::Maze()
 {
-  window_.initialize("Maze", SCREEN_WIDTH, SCREEN_HEIGHT);
   SbObject::window = &window_ ;
-
 
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
     if (SDL_IsGameController(i)) {
@@ -450,8 +442,6 @@ Maze::Maze()
 
 Maze::~Maze()
 {
-  // TTF_CloseFont( font_ );
-  // font_ = nullptr;
   SDL_GameControllerClose( game_controller_ );
   game_controller_ = nullptr;
 }
