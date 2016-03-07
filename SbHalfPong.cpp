@@ -23,22 +23,7 @@ author: Ulrike Hager
 #include "SbHalfPong.h"
 
 
-/////  globals /////
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
-
 SbWindow* SbObject::window;
-
-struct DeleteFont
-{
-  void operator()(TTF_Font* font) const {
-    if ( font ) {
-      TTF_CloseFont( font );
-      font = nullptr;
-    }
-  }
-};
-
 
 
 /*! Paddle implementation
@@ -339,7 +324,7 @@ HighScore::HighScore(std::shared_ptr<TTF_Font> font, std::string filename)
 
 
 void
-HighScore::new_highscore( int score )
+HighScore::new_highscore( uint32_t score )
 {
 #ifdef DEBUG
   std::cout << "[HighScore::new_highscore]" << std::endl;
@@ -351,7 +336,7 @@ HighScore::new_highscore( int score )
 
 
 void
-HighScore::old_highscore( int score )
+HighScore::old_highscore( uint32_t score )
 {
 #ifdef DEBUG
   std::cout << "[HighScore::old_highscore]" << std::endl;
@@ -361,17 +346,17 @@ HighScore::old_highscore( int score )
 
 
 
-int
+uint32_t
 HighScore::read_highscore()
 {
   highscore_ = 0;
   SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
   if ( !file ) {
     file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
-    SDL_RWwrite( file, &highscore_, sizeof(int), 1 );
+    SDL_RWwrite( file, &highscore_, sizeof(uint32_t), 1 );
   }
   else {
-    SDL_RWread( file, &highscore_, sizeof(int), 1 );
+    SDL_RWread( file, &highscore_, sizeof(uint32_t), 1 );
   }
   SDL_RWclose( file );
   return highscore_;
@@ -386,11 +371,130 @@ HighScore::write_highscore()
   if ( !file ) {
     file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
   }
-  SDL_RWwrite( file, &highscore_, sizeof(int), 1 );
+  SDL_RWwrite( file, &highscore_, sizeof(uint32_t), 1 );
   SDL_RWclose( file );
 }
 
 
+
+HalfPong::HalfPong()
+{
+  SbObject::window = &window_ ;
+  font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
+  if ( !font_.get() )
+      throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
+
+  ball_ = std::unique_ptr<Ball>( new Ball );
+  paddle_ = std::unique_ptr<Paddle>( new Paddle );
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay(font_) );
+  game_over_ = std::unique_ptr<GameOver>( new GameOver( font_ ) );
+  high_score_ = std::unique_ptr<HighScore>( new HighScore( font_ ) );
+  lives_ = std::unique_ptr<SbMessage>( new SbMessage(0.2, 0.003, 0.13, 0.07 ) );
+  score_text_ = std::unique_ptr<SbMessage>( new SbMessage( 0.5, 0.003, 0.13, 0.07 ) );
+  lives_->set_font(font_);
+  score_text_->set_font(font_);
+  lives_->set_text( "Lives: " + std::to_string(goal_counter_) );
+  score_text_->set_text( "Score: " + std::to_string(score_) );
+  
+}
+
+
+void
+HalfPong::run()
+{
+    SDL_Event event;
+    bool quit = false;
+
+    while (!quit) {
+      while( SDL_PollEvent( &event ) ) {
+	if (event.type == SDL_QUIT) quit = true;
+	else if (event.type == SDL_KEYDOWN ) {
+	  switch ( event.key.keysym.sym ) {
+	  case SDLK_ESCAPE:
+	    quit = true;
+	    break;
+	  case SDLK_n: case SDLK_SPACE: case SDLK_RETURN:
+	    goal_counter_ = 3;
+	    ball_->reset();
+	    lives_->set_text( "Lives: " + std::to_string(goal_counter_) );
+	    score_ = 0;
+	    score_text_->set_text( "Score: " + std::to_string(score_) );
+	    break;
+	  }
+	}
+	window_.handle_event( event );
+	ball_->handle_event( event );
+	paddle_->handle_event( event );
+	fps_display_->handle_event( event );
+	game_over_->handle_event( event );
+	high_score_->handle_event( event );
+	lives_->handle_event( event );
+	score_text_->handle_event( event );
+      }
+      
+      move_objects();
+      render();
+    }
+}
+
+
+void
+HalfPong::move_objects()
+{
+  if ( goal_counter_ > 0 ) {
+    paddle_->move();
+    int goal = ball_->move( paddle_->bounding_rect() );
+    switch (goal) {
+    case 1: 
+      --goal_counter_;
+      if (goal_counter_ > 0 ) {
+	SDL_AddTimer(1000, Ball::resetball, ball_.get());
+      }
+      else {
+	if ( score_ > high_score_->read_highscore() ) {
+	  high_score_->new_highscore( score_ );
+	}
+	else {
+	  high_score_->old_highscore( score_ ) ;
+	}
+      }
+      lives_->set_text( "Lives: " + std::to_string(goal_counter_) );
+      break;
+    case 2:
+      ++score_;
+      score_text_->set_text( "Score: " + std::to_string(score_) );
+      break;
+    }
+  }
+  else
+    ball_->move( paddle_->bounding_rect() );
+}
+
+
+
+void
+HalfPong::render()
+{
+  fps_display_->update();
+
+  // render
+  SDL_RenderClear( window_.renderer() );
+  paddle_->render();
+  ball_->render();
+  lives_->render();
+  score_text_->render();
+  fps_display_->render();
+  
+  if ( goal_counter_ == 0 ) {
+    game_over_->render();
+    high_score_->render();
+  }
+  SDL_RenderPresent( window_.renderer() );
+
+}
+
+
+/*    
 void run()
 {
     SbWindow window("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -400,7 +504,7 @@ void run()
     Ball ball;
     
     std::shared_ptr<TTF_Font> fps_font = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
-    if ( !fps_font )
+    if ( !fps_font.get() )
       throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
     SbFpsDisplay fps_display( fps_font );
@@ -499,13 +603,14 @@ void run()
       ++frame_counter;  
     }
 }
-
+*/
 
 int main()
 {
   sdl_init();
   try {
-    run();
+    HalfPong halfpong;
+    halfpong.run();
   }
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;

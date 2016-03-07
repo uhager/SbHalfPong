@@ -21,6 +21,26 @@ class Ball;
 class Spark;
 class Paddle;
 
+
+/////  globals /////
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+
+
+struct DeleteFont
+{
+  void operator()(TTF_Font* font) const {
+    if ( font ) {
+      TTF_CloseFont( font );
+      font = nullptr;
+    }
+  }
+};
+
+
+
+
+
 class Paddle : public SbObject
 {
 public:
@@ -97,14 +117,38 @@ class HighScore : public SbMessage
 {
  public:
   HighScore(std::shared_ptr<TTF_Font> font, std::string filename = "halfpong.save");
-  void new_highscore( int score );
-  void old_highscore( int score );
-  int read_highscore();
+  void new_highscore( uint32_t score );
+  void old_highscore( uint32_t score );
+  uint32_t read_highscore();
   void write_highscore();
 
  private:
-  int highscore_;
+  uint32_t highscore_;
   std::string savefile_;
+};
+
+
+
+class HalfPong
+{
+ public:
+  HalfPong();
+  void move_objects();
+  void render();
+  void run();
+  
+ private:
+  SbWindow window_{"Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT};
+  std::unique_ptr<Ball> ball_;
+  std::unique_ptr<Paddle> paddle_;
+  std::shared_ptr<TTF_Font> font_;
+  std::unique_ptr<SbFpsDisplay> fps_display_;
+  std::unique_ptr<SbMessage> lives_;
+  std::unique_ptr<SbMessage> score_text_;
+  std::unique_ptr<GameOver> game_over_;
+  std::unique_ptr<HighScore> high_score_;
+  uint32_t goal_counter_ = 3;
+  uint32_t score_ = 0;
 };
 
 #endif  // SBHALFPONG_H
