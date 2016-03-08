@@ -93,18 +93,16 @@ Ball::handle_event(const SDL_Event& event)
 {
   double sensitivity = 1.0 ; // controller needs slower acceleration
   ControlDir direction = ControlDir::none;
-  const Uint8 *state = SDL_GetKeyboardState(nullptr);
-  if (state[SDL_SCANCODE_UP] )
-    direction = ControlDir::up; //velocity_y_ -= velocity_;
-  if (state[SDL_SCANCODE_DOWN] )
-    direction = ControlDir::down; //velocity_y_ += velocity_;
-  if (state[SDL_SCANCODE_LEFT] )
-    direction = ControlDir::left; //velocity_x_ -= velocity_;
-  if (state[SDL_SCANCODE_RIGHT])
-    direction = ControlDir::right; //velocity_x_ += velocity_;
 
-  /*
-  if( event.type == SDL_JOYAXISMOTION &&  event.jaxis.which == 0 ) {
+  if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
+    switch( event.key.keysym.sym  ) {
+    case SDLK_UP: direction = ControlDir::up; break;
+    case SDLK_DOWN: direction = ControlDir::down; break;
+    case SDLK_LEFT: direction = ControlDir::left; break;
+    case SDLK_RIGHT: direction = ControlDir::right; break;
+    }
+  }
+  else if( event.type == SDL_CONTROLLERAXISMOTION &&  event.jaxis.which == 0 ) {
     switch ( event.jaxis.axis ) {
     case 0: //X axis motion
       sensitivity = 0.1;
@@ -122,8 +120,7 @@ Ball::handle_event(const SDL_Event& event)
       break;
     }
   }
-  */
-  if( event.type == SDL_CONTROLLERAXISMOTION &&  event.jaxis.which == 0 ) {
+  else if( event.type == SDL_JOYAXISMOTION &&  event.jaxis.which == 0 ) {
     switch ( event.jaxis.axis ) {
     case 0: //X axis motion
       sensitivity = 0.1;
@@ -140,6 +137,17 @@ Ball::handle_event(const SDL_Event& event)
 	direction = ControlDir::down;
       break;
     }
+  }
+  else {
+    const Uint8 *state = SDL_GetKeyboardState(nullptr);
+    if (state[SDL_SCANCODE_UP] )
+      direction = ControlDir::up; //velocity_y_ -= velocity_;
+    if (state[SDL_SCANCODE_DOWN] )
+      direction = ControlDir::down; //velocity_y_ += velocity_;
+    if (state[SDL_SCANCODE_LEFT] )
+      direction = ControlDir::left; //velocity_x_ -= velocity_;
+    if (state[SDL_SCANCODE_RIGHT])
+      direction = ControlDir::right; //velocity_x_ += velocity_;
   }
 
 
@@ -160,14 +168,6 @@ Ball::handle_event(const SDL_Event& event)
     break;
   }
     /*
-  if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
-    switch( event.key.keysym.sym  ) {
-    case SDLK_UP: velocity_y_ -= velocity_; break;
-    case SDLK_DOWN: velocity_y_ += velocity_; break;
-    case SDLK_LEFT: velocity_x_ -= velocity_; break;
-    case SDLK_RIGHT: velocity_x_ += velocity_; break;
-    }
-  }
     */
 }
 
