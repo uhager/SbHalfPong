@@ -134,7 +134,7 @@ class HalfPong
  public:
   HalfPong();
   void move_objects();
-  void render();
+  void render( std::vector<SbObject*> objects );
   void run();
   
  private:

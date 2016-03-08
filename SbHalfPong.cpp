@@ -173,8 +173,6 @@ Ball::create_sparks()
 #ifdef DEBUG
     std::cout << "[Ball::create_sparks] index " << i << " - lifetime " << (sparks_.back()).lifetime() << std::endl;
 #endif // DEBUG
-    //    std::function<Uint32(Uint32,void*)> funct = std::bind(&Ball::remove_spark, this, std::placeholders::_1, std::placeholders::_2, toAdd.index_ );
-    //   sparks_.back().spark_timer_ = SDL_AddTimer(lifetime, Spark::expire, &sparks_.back());
   }
 }
 
@@ -402,6 +400,15 @@ HalfPong::HalfPong()
 void
 HalfPong::run()
 {
+    std::vector<SbObject*> objects;
+    objects.push_back(paddle_.get() );
+    objects.push_back(ball_.get() );
+    objects.push_back(lives_.get() );
+    objects.push_back(score_text_.get() );
+    objects.push_back(game_over_.get() );
+    objects.push_back(high_score_.get() );
+    objects.push_back(fps_display_.get() );
+
     SDL_Event event;
     bool quit = false;
 
@@ -423,17 +430,12 @@ HalfPong::run()
 	  }
 	}
 	window_.handle_event( event );
-	ball_->handle_event( event );
-	paddle_->handle_event( event );
-	fps_display_->handle_event( event );
-	game_over_->handle_event( event );
-	high_score_->handle_event( event );
-	lives_->handle_event( event );
-	score_text_->handle_event( event );
+	std::for_each( objects.begin(), objects.end(),
+		       [event] (SbObject* obj) {obj->handle_event( event );} );
       }
       
       move_objects();
-      render();
+      render( objects );
     }
 }
 
@@ -473,18 +475,17 @@ HalfPong::move_objects()
 
 
 void
-HalfPong::render()
+HalfPong::render(std::vector<SbObject*> objects)
 {
   fps_display_->update();
 
   // render
   SDL_RenderClear( window_.renderer() );
-  paddle_->render();
-  ball_->render();
-  lives_->render();
-  score_text_->render();
-  fps_display_->render();
   
+  std::for_each( objects.begin(), objects.end(),
+		 [](SbObject* obj) {if (obj->name() != "gameover") obj->render(); } );
+
+ 
   if ( goal_counter_ == 0 ) {
     game_over_->render();
     high_score_->render();
@@ -494,116 +495,6 @@ HalfPong::render()
 }
 
 
-/*    
-void run()
-{
-    SbWindow window("Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT);
-    SbObject::window = &window ;
-    std::vector<SbObject*> objects;
-    Paddle paddle;
-    Ball ball;
-    
-    std::shared_ptr<TTF_Font> fps_font = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
-    if ( !fps_font.get() )
-      throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
-
-    SbFpsDisplay fps_display( fps_font );
-    SbMessage lives(0.2,0.003,0.13,0.07);
-    SbMessage score_text(0.5, 0.003, 0.13, 0.07);
-    GameOver game_over(fps_font);
-    HighScore high_score(fps_font);
-    lives.set_font(fps_font);
-    score_text.set_font(fps_font);
-
-    int goal_counter = 3;
-    lives.set_text( "Lives: " + std::to_string(goal_counter) );
-    int score = 0;
-    score_text.set_text( "Score: " + std::to_string(score) );
-
-    int highscore = high_score.read_highscore(  );
-
-    SDL_TimerID reset_timer = 0;
-    SDL_Event event;
-    bool quit = false;
-
-    int frame_counter = 0;
-
-    objects.push_back(&paddle);
-    objects.push_back(&ball);
-    objects.push_back(&lives);
-    objects.push_back(&score_text);
-    objects.push_back(&game_over);
-    objects.push_back(&high_score);
-    objects.push_back(&fps_display);
-    
-    while (!quit) {
-      while( SDL_PollEvent( &event ) ) {
-	if (event.type == SDL_QUIT) quit = true;
-	else if (event.type == SDL_KEYDOWN ) {
-	  switch ( event.key.keysym.sym ) {
-	  case SDLK_ESCAPE:
-	    quit = true;
-	    break;
-	  case SDLK_n: case SDLK_SPACE: case SDLK_RETURN:
-	    goal_counter = 3;
-	    ball.reset();
-	    lives.set_text( "Lives: " + std::to_string(goal_counter) );
-	    score = 0;
-	    score_text.set_text( "Score: " + std::to_string(score) );
-	    break;
-	  }
-	}
-	window.handle_event(event);
-	std::for_each( objects.begin(), objects.end(),
-		       [event] (SbObject* obj) {obj->handle_event( event );} );
-      }
-      // move objects   
-      if ( goal_counter > 0 ) {
-	paddle.move();
-	int goal = ball.move( paddle.bounding_rect() );
-	switch (goal) {
-	case 1: 
-	  --goal_counter;
-	  if (goal_counter > 0 ) {
-	    reset_timer = SDL_AddTimer(1000, Ball::resetball, &ball);
-	  }
-	  else {
-	    if ( score > highscore ) {
-	      highscore = score;
-	      high_score.new_highscore( score );
-	    }
-	    else {
-	      high_score.old_highscore( score ) ;
-	    }
-	  }
-	  lives.set_text( "Lives: " + std::to_string(goal_counter) );
-	  break;
-	case 2:
-	  ++score;
-	  score_text.set_text( "Score: " + std::to_string(score) );
-	  break;
-	}
-      }
-      else
-	 ball.move( paddle.bounding_rect() );
-
-      // fps counter
-      fps_display.update();
-
-      // render
-      SDL_RenderClear( window.renderer() );
-      std::for_each( objects.begin(), objects.end(),
-      		     [](SbObject* obj) {if (obj->name() != "gameover") obj->render(); } );
-
-      if ( goal_counter == 0 ) {
-	game_over.render();
-	high_score.render();
-      }
-      SDL_RenderPresent( window.renderer() );
-      ++frame_counter;  
-    }
-}
-*/
 
 int main()
 {
