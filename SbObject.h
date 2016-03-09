@@ -46,7 +46,8 @@ public:
   SbObject( SbRectangle bounding_box);
 
 static SbWindow* window;
-
+ 
+ void center_camera(SDL_Rect& camera, int width, int height) ;
  SbHitPosition check_hit(const SbObject& toHit);
  virtual void handle_event(const SDL_Event& event);
   virtual int move( );

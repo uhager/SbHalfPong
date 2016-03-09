@@ -1,15 +1,7 @@
-/* SbMaze, guide a ball through a maze
-author: Ulrike Hager
-*/
-
-#include <iostream>
 #include <string>
-#include <sstream>
 #include <stdexcept>
-#include <algorithm>
 #include <memory>
-#include <iomanip>
-#include <iterator>
+#include <cmath>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -17,10 +9,7 @@ author: Ulrike Hager
 
 #include "SbTexture.h"
 #include "SbTimer.h"
-#include "SbWindow.h"
-#include "SbObject.h"
-
-#include "SbMaze.h"
+#include "SbPlatformer.h"
 
 
 /////  globals /////
@@ -37,40 +26,41 @@ struct DeleteFont
 };
 
 
-/*! Ball implementation
+
+/*! Player implementation
  */
-Ball::Ball()
-  : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.92*LEVEL_HEIGHT), 25, 25)
+Player::Player()
+  : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.9*LEVEL_HEIGHT), (int)(0.02*LEVEL_WIDTH), (int)(0.07*LEVEL_HEIGHT))
 {
   velocity_y_ = 0;
   velocity_x_ = 0;
   velocity_ = 1.0/5000.0;
   texture_ = std::make_shared<SbTexture>();
-  texture_->from_file(window->renderer(), "resources/ball.png", bounding_rect_.w, bounding_rect_.h );
-  name_ = "ball";
+  texture_->from_rectangle(window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
+  name_ = "player";
 }
 
 
 
 bool
-Ball::check_goal(const Goal& goal)
+Player::check_exit(const Exit& exit)
 {
-  goal_ = false;
-  SbHitPosition hit = check_hit(goal);
+  exit_ = false;
+  SbHitPosition hit = check_hit(exit);
   if ( hit != SbHitPosition::none ) {
-      const SDL_Rect& target = goal.bounding_rect();
+    const SDL_Rect& target = exit.bounding_rect();
     bounding_rect_.x =  target.x + ( target.w - bounding_rect_.w ) / 2;  
     bounding_rect_.y =  target.y + ( target.h - bounding_rect_.h ) / 2;
     move_bounding_box();
-    goal_ = true;
+    exit_ = true;
   }
-  return goal_;
+  return exit_;
 }
 
 
 
 void
-Ball::handle_event(const SDL_Event& event)
+Player::handle_event(const SDL_Event& event)
 {
   double sensitivity = 1.0 ; // controller needs slower acceleration
   ControlDir direction = ControlDir::none;
@@ -134,16 +124,16 @@ Ball::handle_event(const SDL_Event& event)
 
   switch (direction) {
   case ControlDir::up :
-    if (velocity_y_ > -1*velocity_max_) velocity_y_ -= ( velocity_ * sensitivity );
-    break;
-  case ControlDir::down :
-    if (velocity_y_ < velocity_max_) velocity_y_ +=  ( velocity_ * sensitivity );
+    if (velocity_y_ == 0) {
+      velocity_y_ = -1 * ( velocity_jump_ * sensitivity );
+      on_surface_ = false;
+    }
     break;
   case ControlDir::left :
-    if (velocity_x_ > -1*velocity_max_) velocity_x_ -=  ( velocity_ * sensitivity );
+    if (velocity_x_ > -1*velocity_max_ && on_surface_) velocity_x_ -=  ( velocity_ * sensitivity );
     break;
   case ControlDir::right :
-    if (velocity_x_ < velocity_max_) velocity_x_ +=  ( velocity_ * sensitivity );
+    if (velocity_x_ < velocity_max_ && on_surface_) velocity_x_ +=  ( velocity_ * sensitivity );
     break;
   default:
     break;
@@ -155,17 +145,22 @@ Ball::handle_event(const SDL_Event& event)
 
 
 int
-Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
+Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 {
   int result = 0;
-  if ( goal_ ) {
+  if ( exit_ ) {
     return result;
   }
+
+
   Uint32 deltaT = timer_.get_time();
-  int x_velocity = (int)( window->width() * velocity_x_ * deltaT);
-  int y_velocity = (int)( window->height() * velocity_y_ * deltaT);  
-  bounding_rect_.y += y_velocity;
-  bounding_rect_.x += x_velocity;
+  if ( std::abs(velocity_y_) > 0.00000000001 ) {
+    velocity_y_ += 9e-7 * deltaT; // gravity
+  }
+  int x_step = (int)( window->width() * velocity_x_ * deltaT);
+  int y_step = (int)( window->height() * velocity_y_ * deltaT);  
+  bounding_rect_.y += y_step;
+  bounding_rect_.x += x_step;
 
   int hits = 0 ;   // can only hit max 2 tiles at once
   for (auto& tile: level){
@@ -177,19 +172,20 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
       switch (hit) {
       case SbHitPosition::left :
 	if (velocity_x_ > 0 )
-	  velocity_x_ *= -1*momentum_loss_;  
+	  velocity_x_ *= -1;  
 	break;
       case SbHitPosition::right :
 	if (velocity_x_ < 0 )
-	  velocity_x_ *= -1*momentum_loss_;  
+	  velocity_x_ *= -1;  
 	break;
       case SbHitPosition::top :
-	if (velocity_y_ > 0 )
-	  velocity_y_ *= -1*momentum_loss_;  
+	velocity_y_ = 0;
+	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
+	on_surface_ = true;
 	break;
       case SbHitPosition::bottom :
 	if (velocity_y_ < 0 )
-	  velocity_y_ *= -1*momentum_loss_;  
+	  velocity_y_ *= -1;  
 	break;
       default:
 	--hits;
@@ -207,79 +203,59 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 
 
 void
-Ball::reset()
+Player::reset()
 {
-  goal_ = false;
+  exit_ = false;
   velocity_x_ = 0;
   velocity_y_ = 0;
   bounding_rect_.x = (int)(0.9*LEVEL_WIDTH);
-  bounding_rect_.y = (int)(0.92*LEVEL_HEIGHT);
+  bounding_rect_.y = (int)(0.9*LEVEL_HEIGHT);
   move_bounding_box();
   timer_.start();
 }
 
 
 
-Uint32
-Ball::resetball(Uint32 interval, void *param )
-{
-  ((Ball*)param)->reset();
-  return(0);
-}
-
-
-
-/*! Tile implementation
+/*! Platform implementation
  */
-Tile::Tile(int x, int y, int width, int height)
+Platform::Platform(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
-  SDL_Color color = {40, 40, 160, 0};
+  color_ = {40, 40, 160, 0};
   texture_ = std::make_shared<SbTexture>();
-  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
   name_ = "tile";
 }
 
 
-Tile::Tile( SbRectangle bounding_box )
-  : SbObject( bounding_box)
-{
-  SDL_Color color = {40, 40, 160, 0};
-  texture_ = std::make_shared<SbTexture>();
-  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
-  name_ = "tile";
-}
-
-
-
-/*! Goal implementation
+/*! Exit
  */
-Goal::Goal(int x, int y, int width, int height)
+Exit::Exit(int x, int y, int width, int height)
   : SbObject(x, y, width, height)
 {
+  color_ = {200, 100, 100};
   texture_ = std::make_shared<SbTexture>();
-  texture_->from_file(window->renderer(), "resources/goal.png", bounding_rect_.w, bounding_rect_.h );
+  texture_->from_rectangle(window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
   name_ = "goal";
 }
 
 
 
+
 /*! Level implementation
  */
-Level::Level(int num, std::shared_ptr<TTF_Font> font)
-  : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
-  , time_message_(0.9,0,0.1,0.07)
+Level::Level(uint32_t num)
+  : level_num_(num)
 {
   create_level(level_num_);
-  time_message_.set_font(font);
 }
 
 
 void
 Level::create_level(uint32_t num)
 {
-  if ( !tiles_.empty() )
-    tiles_.clear();
+  if ( !platforms_.empty() )
+    platforms_.clear();
   
   if (num > levels.size() )
     throw std::runtime_error("[Level::create_level] No level found for level number = " + std::to_string(num)  );
@@ -292,115 +268,24 @@ Level::create_level(uint32_t num)
     int y = box.y * height_;
     int w = box.w * width_;
     int h = box.h * height_;
-    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
+    platforms_.emplace_back( std::unique_ptr<SbObject>(new Platform( x, y, w, h ) ) );
   }
-  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
+  exit_ = std::unique_ptr<Exit>( new Exit{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_HEIGHT) } );
 }
 
-
-void
-Level::handle_event(const SDL_Event& event)
-{
-  time_message_.handle_event(event);
-}
 
 
 void
 Level::render(const SDL_Rect &camera)
 {
-    for (auto& t: tiles_)
+    for (auto& t: platforms_)
       t->render(camera);
-    goal_->render( camera );
-  std::stringstream strstr;
-  double time = time_message_.time()/1000.0;
-  strstr << std::fixed << std::setprecision(1) << time << " s" ;
-  time_message_.set_text( strstr.str() );
-  time_message_.render();
+    exit_->render( camera );
 }
 
 
 
-/*! HighScore implementation
- */
-HighScore::HighScore(std::shared_ptr<TTF_Font> font, std::string filename)
-  : SbMessage(0.2,0.45,0.6,0.23), savefile_(filename)
-{
-  font_ = font;
-  name_ = "gameover" ;  //!< same name to render only when game over.
-  read_highscores();
-  highscores_.push_back(0);
-}
-
-
-bool
-HighScore::check_highscore(uint32_t level, Uint32 score)
-{
-  bool result = false;
-  if ( level >= highscores_.size() ) {
-    while ( level > highscores_.size() )
-      highscores_.push_back(0);
-    highscores_.push_back( score );
-    result = true;
-  }
-  else {
-    if ( highscores_.at(level) == 0 || score < highscores_.at(level) ) {  // highscore is actually time, faster is better
-      highscores_.at(level) = score;
-      result = true;
-    }
-  }
-  std::ostringstream strstr;
-  if (result) {
-    write_highscores();
-    strstr << "*** New record: " << std::fixed << std::setprecision(2) << score/1000.0 << "s ***" ; 
-  }
-  else {
-    strstr << "Your time: " << std::fixed << std::setprecision(2) << score/1000.0 << "s -- Record: " << highscores_.at(level)/ 1000.0 << "s ";
-  }
-  set_text( strstr.str() );
-  return result;
-}
-
-
-void
-HighScore::write_highscores( )
-{
-  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
-  if ( !file ) {
-    throw std::runtime_error("[HighScore::write_highscores] Error: Couldn't open file " + savefile_ + ":\n" + SDL_GetError() );
-  }
-  uint32_t size = highscores_.size();
-  SDL_RWwrite( file, &size, sizeof(uint32_t), 1 );
-  for ( auto score: highscores_ ) {
-    SDL_RWwrite( file, &score, sizeof(Uint32), 1 );
-  }
-  SDL_RWclose( file );
-  // std::cout << "[HighScore::write_highscores] " ;
-  // std::ostream_iterator<Uint32> iter(std::cout);
-  // std::copy(highscores_.begin(), highscores_.end(), iter);
-}
-
-
-std::vector<Uint32>
-HighScore::read_highscores( )
-{
-  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
-  if ( file ) {
-    uint32_t max = 0;
-    SDL_RWread( file, &max, sizeof(uint32_t), 1 );
-    Uint32 scores[max];
-    SDL_RWread( file, &scores, sizeof(Uint32), max );
-    highscores_.assign( &scores[0], &scores[0]+max );
-    SDL_RWclose( file );
-  }
-  // std::cout << "[HighScore::read_highscores] " ;
-  // std::ostream_iterator<Uint32> iter(std::cout);
-  // std::copy(highscores_.begin(), highscores_.end(), iter);
-  return highscores_;
-}
-
-
-
-Maze::Maze()
+Platformer::Platformer()
 {
   SbObject::window = &window_ ;
 
@@ -414,14 +299,12 @@ Maze::Maze()
   }
 
   levels.emplace_back(lev0, goal0);
-  levels.emplace_back(lev1, goal1);
 
   initialize();
-
 }
 
 
-Maze::~Maze()
+Platformer::~Platformer()
 {
   SDL_GameControllerClose( game_controller_ );
   game_controller_ = nullptr;
@@ -429,7 +312,7 @@ Maze::~Maze()
 
 
 void
-Maze::initialize()
+Platformer::initialize()
 {
   camera_ = { 0, 0, window_.width(), window_.height() };
   
@@ -437,43 +320,42 @@ Maze::initialize()
   if ( !font_ )
     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-  ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(current_level_, font_) );
+  player_ = std::unique_ptr<Player>( new Player );
+  level_ = std::unique_ptr<Level>( new Level(current_level_) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
-  highscore_ = std::unique_ptr<HighScore> (new HighScore( font_ ) );
+
 }
 
 
+
 void
-Maze::reset()
+Platformer::reset()
 {
   if ( (++current_level_) == levels.size() ) {
     current_level_ = 0;
   }
   level_->create_level( current_level_ );
-  ball_->reset();
-  level_->start_timer();
+  player_->reset();
   reset_timer_.reset();
-  in_goal_ = false;
+  in_exit_ = false;
 }
 
 
 Uint32
-Maze::reset_game(Uint32 interval, void *param )
+Platformer::reset_game(Uint32 interval, void *param )
 {
-  ((Maze*)param)->reset();
+  ((Platformer*)param)->reset();
   return(0);
 }
 
 
 
 void
-Maze::run()
+Platformer::run()
 {
     SDL_Event event;
     bool quit = false;
 
-    level_->start_timer();
     
     while (!quit) {
       /// begin event polling
@@ -492,8 +374,8 @@ Maze::run()
 	  quit = true;
 	}
 	window_.handle_event(event);
-	ball_->handle_event(event);
-	level_->handle_event( event );
+	player_->handle_event(event);
+	//	level_->handle_event( event );
 	fps_display_->handle_event(event);
       }
       /// end event polling
@@ -502,15 +384,13 @@ Maze::run()
 	  reset();
 	
 
-      ball_->move(level_->tiles());
-      ball_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
-      if ( !in_goal_ ) {
-	in_goal_ = ball_->check_goal(level_->goal());
-	if (in_goal_) {
+      player_->move(level_->platforms());
+      player_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
+      if ( !in_exit_ ) {
+	in_exit_ = player_->check_exit(level_->exit());
+	if (in_exit_) {
 	  //	  SDL_AddTimer(2000, Maze::reset_game, this);
 	  reset_timer_.start();
-	  level_->stop_timer();
-	  highscore_->check_highscore(current_level_, level_->time() );
 	}
       }
       fps_display_->update();
@@ -518,22 +398,19 @@ Maze::run()
       SDL_RenderClear( window_.renderer() );
       level_->render( camera_ );
       fps_display_->render();
-      ball_->render( camera_ );
-      if ( reset_timer_.get_time() > 0 )
-	highscore_->render();
+      player_->render( camera_ );
       SDL_RenderPresent( window_.renderer() );
 
     }
 }
 
 
-
 int main()
 {
   sdl_init();
   try {
-    Maze maze;
-    maze.run();
+    Platformer plat;
+    plat.run();
   }
   catch (const std::exception& expt) {
     std::cerr << expt.what() << std::endl;
@@ -542,8 +419,4 @@ int main()
   return 0;
 }
   
-
-
-
-
 

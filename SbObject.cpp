@@ -48,7 +48,27 @@ SbObject::SbObject( SbRectangle bounding_box)
 }
 
 
+
+void
+SbObject::center_camera(SDL_Rect& camera, int w, int h) 
+{
+  camera.w = window->width();
+  camera.h = window->height();
+  camera.x = pos_x() + width()/2 - camera.w/2;
+  camera.y = pos_y() + height()/2 - camera.h/2;
+  if ( camera.x < 0 )
+      camera.x = 0;
+  else if ( camera.x > w - camera.w )
+      camera.x = w - camera.w;
   
+  if ( camera.y < 0 )
+      camera.y = 0;
+  else if( camera.y > h - camera.h )
+    camera.y = h - camera.h;
+}
+
+
+
 SbHitPosition
 SbObject::check_hit(const SbObject& toHit)
 {

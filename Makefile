@@ -11,10 +11,12 @@ DEBUG_FLAGS = -g -DDEBUG
 OBJS = SbTexture.o SbTimer.o SbWindow.o SbObject.o SbMessage.o
 PONGOBJS = $(OBJS) SbHalfPong.o
 MAZEOBJS = $(OBJS) SbMaze.o
+PLATOBJS = $(OBJS) SbPlatformer.o
 
-all: $(OBJS) pong maze
+all: $(OBJS) pong maze plat
 pong: $(PONGOBJS) SbHalfPong
 maze: $(MAZEOBJS) SbMaze
+plat: $(PLATOBJS) SbPlatformer
 
 debug: CXXFLAGS += $(DEBUG_FLAGS)
 debug: all
@@ -31,5 +33,8 @@ SbHalfPong: $(PONGOBJS)
 SbMaze: $(MAZEOBJS) 
 	$(CXX) $(CXXFLAGS) $(MAZEOBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
 
+SbPlatformer: $(PLATOBJS) 
+	$(CXX) $(CXXFLAGS) $(PLATOBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
+
 clean:
-	rm -f *.o *.so $(OBJS) SbHalfPong SbMaze
+	rm -f *.o *.so $(OBJS) SbHalfPong SbMaze SbPlatformer

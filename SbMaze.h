@@ -38,7 +38,6 @@ class Ball : public SbObject
 public:
   Ball();
 
-  void center_camera(SDL_Rect& camera);
   bool check_goal(const Goal& goal);
   void handle_event(const SDL_Event& event);
   int move(const std::vector<std::unique_ptr<SbObject>>& level);
