@@ -67,7 +67,7 @@ Player::handle_event(const SDL_Event& event)
 
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
-    case SDLK_UP: direction = ControlDir::up; break;
+    case SDLK_UP: case SDLK_SPACE: direction = ControlDir::up; break;
     case SDLK_DOWN: direction = ControlDir::down; break;
     case SDLK_LEFT: direction = ControlDir::left; break;
     case SDLK_RIGHT: direction = ControlDir::right; break;
