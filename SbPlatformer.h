@@ -107,7 +107,7 @@ class Platformer
   SbWindow* window() {return &window_; }
   
  private:
-  std::shared_ptr<TTF_Font> font_;
+  SbFont font_;
   std::unique_ptr<Player> player_;
   std::unique_ptr<Level> level_ = nullptr;
   SDL_GameController* game_controller_ = nullptr;
