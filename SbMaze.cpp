@@ -19,23 +19,13 @@ author: Ulrike Hager
 #include "SbTimer.h"
 #include "SbWindow.h"
 #include "SbObject.h"
+#include "SbFont.h"
 
 #include "SbMaze.h"
 
 
 /////  globals /////
 SbWindow* SbObject::window;
-
-struct DeleteFont
-{
-  void operator()(TTF_Font* font) const {
-    if ( font ) {
-      TTF_CloseFont( font );
-      font = nullptr;
-    }
-  }
-};
-
 
 /*! Ball implementation
  */
@@ -433,14 +423,15 @@ Maze::initialize()
 {
   camera_ = { 0, 0, window_.width(), window_.height() };
   
-  font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
-  if ( !font_ )
-    throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
+  SbFont font("resources/FreeSans.ttf", 120 );
+  // font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
+  // if ( !font_ )
+  //   throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
   ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(current_level_, font_) );
-  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
-  highscore_ = std::unique_ptr<HighScore> (new HighScore( font_ ) );
+  level_ = std::unique_ptr<Level>( new Level(current_level_, font.font() ) );
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font() ) );
+  highscore_ = std::unique_ptr<HighScore> (new HighScore( font.font() ) );
 }
 
 

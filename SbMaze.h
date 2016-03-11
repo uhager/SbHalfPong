@@ -135,7 +135,6 @@ class Maze
   
  private:
 
-  std::shared_ptr<TTF_Font> font_;
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Level> level_ = nullptr;
   SDL_GameController* game_controller_ = nullptr;

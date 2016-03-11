@@ -11,7 +11,9 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
-
+#ifdef DEBUG
+#include <iostream>
+#endif //DEBUG
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
@@ -44,6 +46,9 @@ class SbFont
  private:
   static void delete_font( TTF_Font* ft) {
     if ( ft ) {
+#ifdef DEBUG
+      std::cout << "[delete_font]" << std::endl;
+#endif // DEBUG
       TTF_CloseFont( ft );
     }
   }
