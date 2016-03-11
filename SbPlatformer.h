@@ -11,7 +11,7 @@
 #include "SbMessage.h"
 #include "SbWindow.h"
 #include "SbObject.h"
-
+#include "SbFont.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -107,7 +107,7 @@ class Platformer
   SbWindow* window() {return &window_; }
   
  private:
-  SbFont font_;
+  SbFont::handle font_;
   std::unique_ptr<Player> player_;
   std::unique_ptr<Level> level_ = nullptr;
   SDL_GameController* game_controller_ = nullptr;

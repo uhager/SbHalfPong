@@ -318,15 +318,14 @@ Platformer::initialize()
 {
   camera_ = { 0, 0, window_.width(), window_.height() };
 
-  font_ = SbFont( "resources/FreeSans.ttf", 120 );  
-  // font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
-  // if ( !font_ )
-  //   throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
+  font_ = SbFont::handle( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
+  if ( !font_ )
+    throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
   player_ = std::unique_ptr<Player>( new Player );
   level_ = std::unique_ptr<Level>( new Level(current_level_) );
-  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_.font() ) );
-
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font_ ) );
+  
 }
 
 
