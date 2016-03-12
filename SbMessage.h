@@ -43,5 +43,26 @@ class SbFpsDisplay : public SbMessage
 };
 
 
+class SbHighScore : public SbMessage
+{
+ public:
+  SbHighScore(std::shared_ptr<TTF_Font> font, std::string filename = "game.save", std::string prefix = "Your result", std::string postfix = "" );
+  bool check_highscore( uint32_t score, bool(SbHighScore::*fctn)(uint32_t, uint32_t), uint32_t level = 0, double multiplier = 1.0);
+  std::vector<uint32_t> highscores() { return highscores_; }
+  std::vector<uint32_t> read_highscores( );
+  void write_highscores( );
+
+  bool higher(uint32_t score, uint32_t level);
+  bool lower(uint32_t score, uint32_t level);
+
+  void set_precision(uint32_t p) {precision_ = p;}
+ private:
+  std::vector<uint32_t> highscores_;
+  std::string savefile_, prefix_, postfix_;
+  uint32_t precision_ = 1;
+};
+
+
+
 #endif  //  SBMESSAGE_H
 

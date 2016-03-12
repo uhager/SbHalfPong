@@ -113,22 +113,6 @@ class GameOver : public SbMessage
 
 
 
-class HighScore : public SbMessage
-{
- public:
-  HighScore(std::shared_ptr<TTF_Font> font, std::string filename = "halfpong.save");
-  void new_highscore( uint32_t score );
-  void old_highscore( uint32_t score );
-  uint32_t read_highscore();
-  void write_highscore();
-
- private:
-  uint32_t highscore_;
-  std::string savefile_;
-};
-
-
-
 class HalfPong
 {
  public:
@@ -141,12 +125,12 @@ class HalfPong
   SbWindow window_{"Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT};
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Paddle> paddle_;
-  std::shared_ptr<TTF_Font> font_;
+  //  std::shared_ptr<TTF_Font> font_;
   std::unique_ptr<SbFpsDisplay> fps_display_;
   std::unique_ptr<SbMessage> lives_;
   std::unique_ptr<SbMessage> score_text_;
   std::unique_ptr<GameOver> game_over_;
-  std::unique_ptr<HighScore> high_score_;
+  std::unique_ptr<SbHighScore> high_score_;
   uint32_t goal_counter_ = 3;
   uint32_t score_ = 0;
 };

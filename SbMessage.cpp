@@ -5,6 +5,8 @@
 
 
 #include <stdexcept>
+#include <sstream>
+#include <iomanip>
 
 #include "SbTexture.h"
 #include "SbWindow.h"
@@ -76,3 +78,98 @@ SbFpsDisplay::update()
   double average = 1000 * times_.size() / sum_ ;
   set_text( std::to_string( int(average) ) + " fps" );
 }
+
+
+/*! SbHighScore implementation
+ */
+SbHighScore::SbHighScore(std::shared_ptr<TTF_Font> font, std::string filename, std::string prefix, std::string postfix)
+  : SbMessage(0.2,0.4,0.6,0.23), savefile_(filename), prefix_(prefix), postfix_(postfix)
+{
+  font_ = font;
+  name_ = "gameover" ;  //!< same name to render only when game over.
+  read_highscores();
+  //  highscores_.push_back(0);
+}
+
+
+bool
+SbHighScore::check_highscore(uint32_t score, bool(SbHighScore::*fctn)(uint32_t, uint32_t), uint32_t level, double multiplier)
+{
+  bool result = false;
+  if ( level >= highscores_.size() ) {
+    while ( level > highscores_.size() )
+      highscores_.push_back(0);
+    highscores_.push_back( score );
+    result = true;
+  }
+  else {
+    if ( (this->*fctn)(score, level) ) {  // highscore is actually time, faster is better
+      highscores_.at(level) = score;
+      result = true;
+    }
+  }
+  std::ostringstream strstr;
+  if (result) {
+    write_highscores();
+    strstr << "*** New record: " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix_ << " ***" ; 
+  }
+  else {
+    strstr << prefix_ << " " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix_ << " -- Record: " << highscores_.at(level) * multiplier << postfix_ ;
+  }
+  set_text( strstr.str() );
+  return result;
+}
+
+
+bool
+SbHighScore::lower(uint32_t score, uint32_t level)
+{
+  return ( highscores_.at(level) == 0 || score < highscores_.at(level) );
+}
+
+
+bool
+SbHighScore::higher(uint32_t score, uint32_t level)
+{
+  return (  score > highscores_.at(level) );
+}
+
+
+
+void
+SbHighScore::write_highscores( )
+{
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
+  if ( !file ) {
+    throw std::runtime_error("[SbHighScore::write_highscores] Error: Couldn't open file " + savefile_ + ":\n" + SDL_GetError() );
+  }
+  uint32_t size = highscores_.size();
+  SDL_RWwrite( file, &size, sizeof(uint32_t), 1 );
+  for ( auto score: highscores_ ) {
+    SDL_RWwrite( file, &score, sizeof(uint32_t), 1 );
+  }
+  SDL_RWclose( file );
+  // std::cout << "[SbHighScore::write_highscores] " ;
+  // std::ostream_iterator<uint32_t> iter(std::cout);
+  // std::copy(highscores_.begin(), highscores_.end(), iter);
+}
+
+
+std::vector<uint32_t>
+SbHighScore::read_highscores( )
+{
+  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
+  if ( file ) {
+    uint32_t max = 0;
+    SDL_RWread( file, &max, sizeof(uint32_t), 1 );
+    uint32_t scores[max];
+    SDL_RWread( file, &scores, sizeof(uint32_t), max );
+    highscores_.assign( &scores[0], &scores[0]+max );
+    SDL_RWclose( file );
+  }
+  // std::cout << "[SbHighScore::read_highscores] " ;
+  // std::ostream_iterator<uint32_t> iter(std::cout);
+  // std::copy(highscores_.begin(), highscores_.end(), iter);
+  return highscores_;
+}
+

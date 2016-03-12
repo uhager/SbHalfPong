@@ -103,22 +103,6 @@ class Level
 };
 
 
-class HighScore : public SbMessage
-{
- public:
-  HighScore(std::shared_ptr<TTF_Font> font, std::string filename = "maze.save");
-  bool check_highscore(uint32_t level, Uint32 score);
-  std::vector<Uint32> highscores() { return highscores_; }
-  void write_highscores( );
-  std::vector<Uint32> read_highscores( );
-  void write_highscore();
-
- private:
-  std::vector<Uint32> highscores_;
-  std::string savefile_;
-};
-
-
 class Maze
 {
  public:
@@ -144,7 +128,7 @@ class Maze
   SDL_Rect camera_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;
-  std::unique_ptr<HighScore> highscore_ = nullptr;
+  std::unique_ptr<SbHighScore> highscore_ = nullptr;
 };
 
 
