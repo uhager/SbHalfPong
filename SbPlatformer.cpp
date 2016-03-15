@@ -17,17 +17,6 @@
 /////  globals /////
 SbWindow* SbObject::window;
 
-struct DeleteFont
-{
-  void operator()(TTF_Font* font) const {
-    if ( font ) {
-      TTF_CloseFont( font );
-      font = nullptr;
-    }
-  }
-};
-
-
 
 /*! Player implementation
  */
@@ -181,13 +170,14 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
   bounding_rect_.y += y_step;
   bounding_rect_.x += x_step;
 
-  int hits = 0 ;   // can only hit max 2 tiles at once
+  //  int hits = 0 ;   // can only hit max 2 tiles at once
+  on_surface_ = false;
   for (auto& tile: level){
     SbHitPosition hit = check_hit(*tile);
     if ( hit == SbHitPosition::none )
       continue;
     else {
-      ++hits;
+      //     ++hits;
       switch (hit) {
       case SbHitPosition::left :
 	if (velocity_x_ > 0 )
@@ -208,11 +198,11 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	  velocity_y_ *= -1;  
 	break;
       default:
-	--hits;
+	//	--hits;
 	break;
       }
-      if ( hits == 2 )
-	break;
+      // if ( hits == 2 )
+      // 	break;
     }
   }
   move_bounding_box();
@@ -246,6 +236,69 @@ Platform::Platform(int x, int y, int width, int height)
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
   name_ = "tile";
 }
+
+
+
+int
+Platform::move()
+{
+  Uint32 deltaT = timer_.get_time();
+  
+  if (velocity_.x > 0 && limits_.left != limits_.right ) {
+    if ( bounding_rect_.x + bounding_rect_.w >= limits_.right ) {
+      if ( velocity_x_ > 0 ) velocity_x_ *= -1;
+    }
+    else if( bounding_rect_.x < limits_.left ) {
+      if (velocity_x_ < 0 ) velocity_x_ *= -1;
+    }
+  }
+  if (velocity_.y > 0 && limits_.top != limits_.bottom ) {
+    if ( bounding_rect_.y + bounding_rect_.h >= limits_.bottom ) {
+      if ( velocity_y_ > 0 ) velocity_y_ *= -1;
+    }
+    else if ( bounding_rect_.y < limits_.top ) {
+      if ( velocity_y_ < 0 ) velocity_y_ *= -1;
+    }
+  }
+
+  int x_step = (int)( window->width() * velocity_x_ * deltaT);
+  int y_step = (int)( window->height() * velocity_y_ * deltaT);  
+  bounding_rect_.y += y_step;
+  bounding_rect_.x += x_step;
+
+  move_bounding_box();
+  timer_.start();
+  return 0;
+}
+
+
+void
+Platform::set_velocities(double x, double y)
+{
+  velocity_= {x, y};
+  velocity_x_ = x;
+  velocity_y_ = y;
+}
+
+
+void
+Platform::set_velocities(Velocity v)
+{
+  velocity_= v;
+  velocity_x_ = v.x;
+  velocity_y_ = v.y;
+}
+
+
+void
+Platform::set_limits(MovementLimits limit)
+{
+  limits_.left = bounding_rect_.x - limit.left;
+  limits_.right = bounding_rect_.x + bounding_rect_.w + limit.right;
+  limits_.top = bounding_rect_.y - limit.top;
+  limits_.bottom = bounding_rect_.y + bounding_rect_.h + limit.bottom;
+}
+
 
 
 /*! Exit
@@ -282,17 +335,34 @@ Level::create_level(uint32_t num)
 
   std::vector< SbRectangle > &coords = (levels.at(num).tiles);
   SbRectangle& goal = levels.at(num).goal;
-
-   for ( auto box: coords ){
-    int x = box.x * width_;
-    int y = box.y * height_;
-    int w = box.w * width_;
-    int h = box.h * height_;
-    platforms_.emplace_back( std::unique_ptr<SbObject>(new Platform( x, y, w, h ) ) );
+  std::vector<MovementRange>& ranges = (levels.at(num).ranges);
+  std::vector<Velocity>& vels = (levels.at(num).velocities);
+  for ( uint32_t i = 0; i < coords.size(); ++i ){
+    int x = coords.at(i).x * width_;
+    int y = coords.at(i).y * height_;
+    int w = coords.at(i).w * width_;
+    int h = coords.at(i).h * height_;
+    
+    Platform* p = new Platform( x, y, w, h );
+    if (ranges.size() > i && vels.size() > i){
+      MovementRange& rg = ranges.at(i);
+      MovementLimits lmt = rg.to_limits(width_, height_);
+      p->set_limits(lmt);
+      p->set_velocities(vels.at(i));
+    }
+    
+    platforms_.emplace_back( std::unique_ptr<SbObject>( p ) );
   }
   exit_ = std::unique_ptr<Exit>( new Exit{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_HEIGHT) } );
 }
 
+
+void
+Level::move()
+{
+  for (auto& p: platforms_)
+    p->move();
+}
 
 
 void
@@ -318,7 +388,7 @@ Platformer::Platformer()
     }
   }
 
-  levels.emplace_back(lev0, goal0);
+  levels.emplace_back(lev0, goal0, range0, velocity0);
 
   initialize();
 }
@@ -406,6 +476,7 @@ Platformer::run()
 	
 
       player_->move(level_->platforms());
+      level_->move();
       player_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
       if ( !in_exit_ ) {
 	in_exit_ = player_->check_exit(level_->exit());

@@ -26,6 +26,55 @@ class Level;
 class Platformer;
 
 
+struct MovementLimits
+{
+  MovementLimits(uint32_t l, uint32_t r, uint32_t t, uint32_t b)
+  : left(l), right(r), top(t), bottom(b)
+  {}
+  MovementLimits() = default;
+
+  uint32_t left = 0;
+  uint32_t right = 0;
+  uint32_t top = 0;
+  uint32_t bottom = 0;
+};
+
+
+struct MovementRange
+{
+  MovementRange(double l, double r, double t, double b)
+  : left(l), right(r), top(t), bottom(b)
+  {}
+  MovementRange() = default;
+  
+  MovementLimits to_limits(uint32_t width, uint32_t height) {
+    MovementLimits result;
+    result.left = left * width;
+    result.right = right * width;
+    result.top = top * height;
+    result.bottom = bottom * height;
+    return result;
+  }
+
+  double left = 0;
+  double right = 0;
+  double top = 0;
+  double bottom = 0;
+};
+
+
+struct Velocity
+{
+  Velocity(double xdir, double ydir)
+  : x(xdir), y(ydir)
+  {}
+  Velocity() = default;
+  
+  double x = 0;
+  double y = 0;
+};
+
+
 
 class Player : public SbObject
 {
@@ -56,8 +105,17 @@ class Player : public SbObject
 
 class Platform : public SbObject
 {
+  friend class Level;
  public:
     Platform(int x, int y, int width, int height);
+    int move();
+    
+ private:
+    Velocity velocity_;
+    MovementLimits limits_;
+    void set_velocities(double x, double y);
+    void set_velocities(Velocity v);
+    void set_limits(MovementLimits limit);
 };
 
 
@@ -82,6 +140,7 @@ class Level
   void render(const SDL_Rect &camera);
   uint32_t level_number() { return level_num_; }
   //  void handle_event(const SDL_Event& event);
+  void move();
   
  private:
   uint32_t width_ = LEVEL_WIDTH;
@@ -123,11 +182,13 @@ class Platformer
 
 struct LevelCoordinates
 {
-  LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g)
-  : tiles(t),goal(g)
+LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g, std::vector<MovementRange> r, std::vector<Velocity> v)
+: tiles(t),goal(g), ranges(r), velocities(v)
   {}
   std::vector<SbRectangle> tiles;
   SbRectangle goal;
+  std::vector<MovementRange> ranges;
+  std::vector<Velocity> velocities;
 };
 
 
@@ -141,6 +202,15 @@ std::vector<SbRectangle> lev0 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.0,0
 				 ,{0.03,0.77,0.12,0.03}, {0.18, 0.57, 0.12, 0.03}, {0.03, 0.37, 0.12, 0.03} 
 	};
 SbRectangle goal0 = {0.03, 0.25, 0.03, 0.12};
+std::vector<MovementRange> range0 = { {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} /* outer frame */
+				      , {0, 0, 0.1, 0}
+				      , {0, 0.05, 0.0, 0.0}, {0.02, 0.07, 0.05, 0.05}, {0, 0, 0, 0}
+};
+std::vector<Velocity> velocity0 = { {0, 0}, {0, 0}, {0, 0}, {0, 0}
+				    ,{0, 0.0001}
+				    ,{ 0.0001, 0}, {0.0001, 0.0001}, {0,0}
+};
+
 ////////////////////
 //// levels end ////
 ////////////////////
