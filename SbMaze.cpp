@@ -62,14 +62,14 @@ void
 Ball::handle_event(const SDL_Event& event)
 {
   double sensitivity = 1.0 ; // controller needs slower acceleration
-  ControlDir direction = ControlDir::none;
+  SbControlDir direction = SbControlDir::none;
 
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
-    case SDLK_UP: direction = ControlDir::up; break;
-    case SDLK_DOWN: direction = ControlDir::down; break;
-    case SDLK_LEFT: direction = ControlDir::left; break;
-    case SDLK_RIGHT: direction = ControlDir::right; break;
+    case SDLK_UP: direction = SbControlDir::up; break;
+    case SDLK_DOWN: direction = SbControlDir::down; break;
+    case SDLK_LEFT: direction = SbControlDir::left; break;
+    case SDLK_RIGHT: direction = SbControlDir::right; break;
     }
   }
   else if( event.type == SDL_CONTROLLERAXISMOTION &&  event.jaxis.which == 0 ) {
@@ -77,16 +77,16 @@ Ball::handle_event(const SDL_Event& event)
     case 0: //X axis motion
       sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::left;
+	direction = SbControlDir::left;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::right;
+	direction = SbControlDir::right;
       break;
     case 1:
       sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::up;
+	direction = SbControlDir::up;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::down;
+	direction = SbControlDir::down;
       break;
     }
   }
@@ -95,43 +95,43 @@ Ball::handle_event(const SDL_Event& event)
     case 0: //X axis motion
       sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::left;
+	direction = SbControlDir::left;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::right;
+	direction = SbControlDir::right;
       break;
     case 1:
       sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::up;
+	direction = SbControlDir::up;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::down;
+	direction = SbControlDir::down;
       break;
     }
   }
   else {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
     if (state[SDL_SCANCODE_UP] )
-      direction = ControlDir::up; //velocity_y_ -= velocity_;
+      direction = SbControlDir::up; //velocity_y_ -= velocity_;
     if (state[SDL_SCANCODE_DOWN] )
-      direction = ControlDir::down; //velocity_y_ += velocity_;
+      direction = SbControlDir::down; //velocity_y_ += velocity_;
     if (state[SDL_SCANCODE_LEFT] )
-      direction = ControlDir::left; //velocity_x_ -= velocity_;
+      direction = SbControlDir::left; //velocity_x_ -= velocity_;
     if (state[SDL_SCANCODE_RIGHT])
-      direction = ControlDir::right; //velocity_x_ += velocity_;
+      direction = SbControlDir::right; //velocity_x_ += velocity_;
   }
 
 
   switch (direction) {
-  case ControlDir::up :
+  case SbControlDir::up :
     if (velocity_y_ > -1*velocity_max_) velocity_y_ -= ( velocity_ * sensitivity );
     break;
-  case ControlDir::down :
+  case SbControlDir::down :
     if (velocity_y_ < velocity_max_) velocity_y_ +=  ( velocity_ * sensitivity );
     break;
-  case ControlDir::left :
+  case SbControlDir::left :
     if (velocity_x_ > -1*velocity_max_) velocity_x_ -=  ( velocity_ * sensitivity );
     break;
-  case ControlDir::right :
+  case SbControlDir::right :
     if (velocity_x_ < velocity_max_) velocity_x_ +=  ( velocity_ * sensitivity );
     break;
   default:

@@ -17,17 +17,13 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 const int LEVEL_WIDTH = 2000;
 const int LEVEL_HEIGHT = 1500;
-const int CONTROLLER_DEADZONE = 6000;
+const int CONTROLLER_DEADZONE = 7000;
 const std::string name = "Platformer";
 
 class Exit;
 class Platform;
 class Level;
 class Platformer;
-
-enum class ControlDir {
-  none, left, right, up, down
-};
 
 
 
@@ -45,10 +41,15 @@ class Player : public SbObject
   void reset();
 
  private:
+  bool check_air_deltav( double sensitivity );
+  
   bool exit_ = false;
   double velocity_max_ = 1.0/800.0;
   double velocity_jump_ = 1.0/800.0;
   bool on_surface_ = true;
+  uint32_t in_air_deltav_ = 0;
+  uint32_t allowed_air_deltav_ = 2;
+  double controller_sensitivity_ = 0.1;
 };
 
 

@@ -23,6 +23,11 @@ enum class SbHitPosition {
     };
 
 
+enum class SbControlDir {
+  none, left, right, up, down
+};
+
+
 struct SbRectangle
 {
   SbRectangle(double xn, double yn, double wn, double hn)

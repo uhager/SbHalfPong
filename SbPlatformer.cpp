@@ -43,6 +43,18 @@ Player::Player()
 }
 
 
+bool
+Player::check_air_deltav(double sensitivity)
+{
+  bool can_move = false;
+  if ( !on_surface_ && in_air_deltav_ > allowed_air_deltav_)
+	return can_move;
+  if ( !on_surface_ )
+    in_air_deltav_ += sensitivity;
+  
+  return true ;
+}
+
 
 bool
 Player::check_exit(const Exit& exit)
@@ -65,83 +77,88 @@ void
 Player::handle_event(const SDL_Event& event)
 {
   double sensitivity = 1.0 ; // controller needs slower acceleration
-  ControlDir direction = ControlDir::none;
+  SbControlDir direction = SbControlDir::none;
 
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
     switch( event.key.keysym.sym  ) {
-    case SDLK_UP: case SDLK_SPACE: direction = ControlDir::up; break;
-    case SDLK_DOWN: direction = ControlDir::down; break;
-    case SDLK_LEFT: direction = ControlDir::left; break;
-    case SDLK_RIGHT: direction = ControlDir::right; break;
+    case SDLK_UP: case SDLK_SPACE: direction = SbControlDir::up; break;
+    case SDLK_DOWN: direction = SbControlDir::down; break;
+    case SDLK_LEFT: direction = SbControlDir::left; break;
+    case SDLK_RIGHT: direction = SbControlDir::right; break;
     }
   }
   else if( event.type == SDL_CONTROLLERAXISMOTION &&  event.jaxis.which == 0 ) {
+      sensitivity = controller_sensitivity_;
     switch ( event.jaxis.axis ) {
     case 0: //X axis motion
-      sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::left;
+	direction = SbControlDir::left;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::right;
+	direction = SbControlDir::right;
       break;
     case 1:
-      sensitivity = 0.1;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::up;
+	direction = SbControlDir::up;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::down;
+	direction = SbControlDir::down;
       break;
     }
   }
   else if( event.type == SDL_JOYAXISMOTION &&  event.jaxis.which == 0 ) {
     switch ( event.jaxis.axis ) {
     case 0: //X axis motion
-      sensitivity = 0.1;
+      sensitivity = controller_sensitivity_;
       if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::left;
+	direction = SbControlDir::left;
       else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::right;
+	direction = SbControlDir::right;
       break;
-    case 1:
-      sensitivity = 0.1;
-      if ( event.jaxis.value < -CONTROLLER_DEADZONE )
-	direction = ControlDir::up;
-      else if ( event.jaxis.value > CONTROLLER_DEADZONE )
-	direction = ControlDir::down;
-      break;
+    // case 1:
+    //   sensitivity = 0.1;
+    //   if ( event.jaxis.value < -CONTROLLER_DEADZONE )
+    // 	direction = SbControlDir::up;
+    //   else if ( event.jaxis.value > CONTROLLER_DEADZONE )
+    // 	direction = SbControlDir::down;
+    //   break;
     }
+  }
+  else if (   event.type == SDL_CONTROLLERBUTTONDOWN
+	      && event.cbutton.which == 0
+	      && event.cbutton.button == SDL_CONTROLLER_BUTTON_A ) {
+	direction = SbControlDir::up;   
   }
   else {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
     if (state[SDL_SCANCODE_UP] )
-      direction = ControlDir::up; //velocity_y_ -= velocity_;
+      direction = SbControlDir::up; //velocity_y_ -= velocity_;
     if (state[SDL_SCANCODE_DOWN] )
-      direction = ControlDir::down; //velocity_y_ += velocity_;
+      direction = SbControlDir::down; //velocity_y_ += velocity_;
     if (state[SDL_SCANCODE_LEFT] )
-      direction = ControlDir::left; //velocity_x_ -= velocity_;
+      direction = SbControlDir::left; //velocity_x_ -= velocity_;
     if (state[SDL_SCANCODE_RIGHT])
-      direction = ControlDir::right; //velocity_x_ += velocity_;
+      direction = SbControlDir::right; //velocity_x_ += velocity_;
   }
 
-
   switch (direction) {
-  case ControlDir::up :
+  case SbControlDir::up :
     if (velocity_y_ == 0) {
       velocity_y_ = -1 * ( velocity_jump_ * sensitivity );
       on_surface_ = false;
+      in_air_deltav_ = 0;
     }
     break;
-  case ControlDir::left :
-    if (velocity_x_ > -1*velocity_max_ && on_surface_) velocity_x_ -=  ( velocity_ * sensitivity );
+  case SbControlDir::left :
+    if (velocity_x_ > -1*velocity_max_ && check_air_deltav(sensitivity) ) {
+      velocity_x_ -=  ( velocity_ * sensitivity );
+    }
     break;
-  case ControlDir::right :
-    if (velocity_x_ < velocity_max_ && on_surface_) velocity_x_ +=  ( velocity_ * sensitivity );
+  case SbControlDir::right :
+    if (velocity_x_ < velocity_max_ && check_air_deltav(sensitivity) ) 
+      velocity_x_ +=  ( velocity_ * sensitivity );
     break;
   default:
     break;
   }
-    /*
-    */
 }
 
 
@@ -156,7 +173,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 
 
   Uint32 deltaT = timer_.get_time();
-  if ( std::abs(velocity_y_) > 0.00000000001 ) {
+  if ( !on_surface_ ) {
     velocity_y_ += 9e-7 * deltaT; // gravity
   }
   int x_step = (int)( window->width() * velocity_x_ * deltaT);
@@ -184,6 +201,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	velocity_y_ = 0;
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
+	//	in_air_deltav_ = 0;
 	break;
       case SbHitPosition::bottom :
 	if (velocity_y_ < 0 )

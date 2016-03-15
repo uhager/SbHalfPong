@@ -28,10 +28,6 @@ const int CONTROLLER_DEADZONE = 6000;
 const std::string name = "Maze";
 
   
-enum class ControlDir {
-  none, left, right, up, down
-};
-
 
 class Ball : public SbObject
 {
