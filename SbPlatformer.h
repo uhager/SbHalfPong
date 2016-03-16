@@ -177,6 +177,7 @@ class Platformer
   bool in_exit_ = false;
   uint32_t current_level_ = 0;
   SbWindow window_{name, SCREEN_WIDTH, SCREEN_HEIGHT};
+  SbWorld world_;
   SDL_Rect camera_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;

@@ -8,19 +8,24 @@
 
 #include "SbTexture.h"
 #include "SbWindow.h"
+#include "SbWorld.h"
 
 #include "SbObject.h"
 
+
+SbWorld* SbObject::world;
+SbWindow* SbObject::window;
+SbWindow* SbWorld::window;
 
 
 SbObject::SbObject(int x, int y, int width, int height)
 {
   texture_ = std::make_shared<SbTexture>();
   bounding_rect_ = {x,y,width, height};
-  bounding_box_ = { double(bounding_rect_.x)/window->width()
-		    , double(bounding_rect_.y)/window->height()
-		    , double(bounding_rect_.w)/window->width()
-		    , double(bounding_rect_.h)/window->height() };
+  bounding_box_ = { double(bounding_rect_.x)/world->width()
+		    , double(bounding_rect_.y)/world->height()
+		    , double(bounding_rect_.w)/world->width()
+		    , double(bounding_rect_.h)/world->height() };
 }
 
 
@@ -29,10 +34,10 @@ SbObject::SbObject(double x, double y, double width, double height)
 {
   texture_ = std::make_shared<SbTexture>();
   bounding_box_ = {x,y,width, height};
-  bounding_rect_.x = static_cast<int>(x * window->width() );
-  bounding_rect_.y = static_cast<int>(y * window->height() );
-  bounding_rect_.w = static_cast<int>(width * window->width() );
-  bounding_rect_.h = static_cast<int>(height * window->height() );
+  bounding_rect_.x = static_cast<int>(x * world->width() );
+  bounding_rect_.y = static_cast<int>(y * world->height() );
+  bounding_rect_.w = static_cast<int>(width * world->width() );
+  bounding_rect_.h = static_cast<int>(height * world->height() );
 }
 
 
@@ -41,10 +46,10 @@ SbObject::SbObject( SbRectangle bounding_box)
   : bounding_box_(bounding_box)
 {
   texture_ = std::make_shared<SbTexture>();
-  bounding_rect_.x = static_cast<int>(bounding_box_.x * window->width() );
-  bounding_rect_.y = static_cast<int>(bounding_box_.y * window->height() );
-  bounding_rect_.w = static_cast<int>(bounding_box_.w * window->width() );
-  bounding_rect_.h = static_cast<int>(bounding_box_.h * window->height() );
+  bounding_rect_.x = static_cast<int>(bounding_box_.x * world->width() );
+  bounding_rect_.y = static_cast<int>(bounding_box_.y * world->height() );
+  bounding_rect_.w = static_cast<int>(bounding_box_.w * world->width() );
+  bounding_rect_.h = static_cast<int>(bounding_box_.h * world->height() );
 }
 
 
@@ -73,29 +78,29 @@ SbHitPosition
 SbObject::check_hit(const SbObject& toHit)
 {
   SbHitPosition result = SbHitPosition::none;
-  const SDL_Rect& hit_box = toHit.bounding_rect();
+  const SbRectangle& hit_box = toHit.bounding_box();
   bool in_xrange = false, in_yrange = false, x_hit_left = false, x_hit_right = false, y_hit_top = false, y_hit_bottom = false ;
 
-  if ( bounding_rect_.x + bounding_rect_.w/2 >= hit_box.x &&
-       bounding_rect_.x + bounding_rect_.w/2 <= hit_box.x + hit_box.w )
+  if ( bounding_box_.x + bounding_box_.w/2 >= hit_box.x &&
+       bounding_box_.x + bounding_box_.w/2 <= hit_box.x + hit_box.w )
     in_xrange = true;
       
-  if ( bounding_rect_.y + bounding_rect_.h/2 >= hit_box.y  &&
-       bounding_rect_.y + bounding_rect_.h/2 <= hit_box.y + hit_box.h)
+  if ( bounding_box_.y + bounding_box_.h/2 >= hit_box.y  &&
+       bounding_box_.y + bounding_box_.h/2 <= hit_box.y + hit_box.h)
      in_yrange = true;
 
-  if ( bounding_rect_.x + bounding_rect_.w >= hit_box.x               &&
-       bounding_rect_.x                   <= hit_box.x + hit_box.w ) {
-    if ( bounding_rect_.x > hit_box.x ) 
+  if ( bounding_box_.x + bounding_box_.w >= hit_box.x               &&
+       bounding_box_.x                   <= hit_box.x + hit_box.w ) {
+    if ( bounding_box_.x > hit_box.x ) 
       x_hit_right = true;
-    else if ( bounding_rect_.x + bounding_rect_.w < hit_box.x + hit_box.w)
+    else if ( bounding_box_.x + bounding_box_.w < hit_box.x + hit_box.w)
       x_hit_left = true;
   }
-  if ( bounding_rect_.y + bounding_rect_.h >= hit_box.y               &&
-       bounding_rect_.y                   <= hit_box.y + hit_box.h ) {
-    if ( bounding_rect_.y > hit_box.y ) 
+  if ( bounding_box_.y + bounding_box_.h >= hit_box.y               &&
+       bounding_box_.y                   <= hit_box.y + hit_box.h ) {
+    if ( bounding_box_.y > hit_box.y ) 
       y_hit_bottom = true;
-    else if ( bounding_rect_.y + bounding_rect_.h < hit_box.y + hit_box.h )
+    else if ( bounding_box_.y + bounding_box_.h < hit_box.y + hit_box.h )
       y_hit_top = true;
   }
   
@@ -116,10 +121,10 @@ void
 SbObject::handle_event(const SDL_Event& event)
 {
   if ( window->new_size() ) {
-    bounding_rect_.x = static_cast<int>(window->width() * bounding_box_.x);
-    bounding_rect_.y = static_cast<int>(window->height() * bounding_box_.y);
-    bounding_rect_.w = static_cast<int>(window->width() * bounding_box_.w); 
-    bounding_rect_.h = static_cast<int>(window->height() * bounding_box_.h); 
+    bounding_rect_.x = static_cast<int>(world->width() * bounding_box_.x);
+    bounding_rect_.y = static_cast<int>(world->height() * bounding_box_.y);
+    bounding_rect_.w = static_cast<int>(world->width() * bounding_box_.w); 
+    bounding_rect_.h = static_cast<int>(world->height() * bounding_box_.h); 
   }
 }
 
@@ -151,16 +156,16 @@ SbObject::move( )
 void
 SbObject::move_bounding_box()
 {
-  bounding_box_.x = double(bounding_rect_.x) / window->width();
-  bounding_box_.y = double(bounding_rect_.y) / window->height();
+  bounding_box_.x = double(bounding_rect_.x) / world->width();
+  bounding_box_.y = double(bounding_rect_.y) / world->height();
 }
   
 
 void
 SbObject::move_bounding_rect()
 {
-  bounding_rect_.x = double(bounding_box_.x * window->width() );
-  bounding_rect_.y = double(bounding_box_.y * window->height() );
+  bounding_rect_.x = double(bounding_box_.x * world->width() );
+  bounding_rect_.y = double(bounding_box_.y * world->height() );
 }
   
 
@@ -168,7 +173,7 @@ SbObject::move_bounding_rect()
 std::ostream&
 SbObject::print_dimensions(std::ostream& os)
 {
-  os << "window = " << window->height() << "x" << window->width()
+  os << "window = " << world->height() << "x" << world->width()
      << " bounding box: " << bounding_box_.x << "," << bounding_box_.y
      << " - " << bounding_box_.w << "x" << bounding_box_.h
      << " ;bounding rect: " << bounding_rect_.x << "," << bounding_rect_.y

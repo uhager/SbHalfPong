@@ -15,7 +15,7 @@ author: Ulrike Hager
 
 #include "SbObject.h"
 #include "SbMessage.h"
-
+#include "SbWorld.h"
 
 class Ball;
 class Spark;
@@ -25,18 +25,6 @@ class Paddle;
 /////  globals /////
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
-
-
-struct DeleteFont
-{
-  void operator()(TTF_Font* font) const {
-    if ( font ) {
-      TTF_CloseFont( font );
-      font = nullptr;
-    }
-  }
-};
-
 
 
 
@@ -123,6 +111,7 @@ class HalfPong
   
  private:
   SbWindow window_{"Half-Pong", SCREEN_WIDTH, SCREEN_HEIGHT};
+  SbWorld world_;
   std::unique_ptr<Ball> ball_;
   std::unique_ptr<Paddle> paddle_;
   //  std::shared_ptr<TTF_Font> font_;

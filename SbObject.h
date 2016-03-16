@@ -14,6 +14,7 @@
 #include <SDL2/SDL.h>
 
 #include "SbTimer.h"
+#include "SbWorld.h"
 
 class SbTexture;
 class SbWindow;
@@ -50,7 +51,8 @@ public:
   SbObject(double x, double y, double width, double height);
   SbObject( SbRectangle bounding_box);
 
-static SbWindow* window;
+  static SbWorld* world;
+  static SbWindow* window;
  
  void center_camera(SDL_Rect& camera, int width, int height) ;
  SbHitPosition check_hit(const SbObject& toHit);
@@ -60,7 +62,7 @@ static SbWindow* window;
   virtual void render(const SDL_Rect &camera);
   virtual void was_hit();
 
-  SbRectangle bounding_box() { return bounding_box_;};
+  SbRectangle bounding_box() const { return bounding_box_;};
   SDL_Rect bounding_rect() const {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
   bool is_inside(int x, int y);

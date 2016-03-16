@@ -13,7 +13,7 @@ author: Ulrike Hager
 
 #include "SbObject.h"
 #include "SbMessage.h"
-
+#include "SbWorld.h"
 
 class Ball;
 class Tile;
@@ -40,8 +40,7 @@ public:
   //  void render();
   /*! Reset after goal.
    */
-  void reset();
-  static Uint32 resetball(Uint32 interval, void *param );
+  void reset(const SbWorld& world);
   void set_momentum_loss(double ml) {momentum_loss_ = ml;}
   
 private:
@@ -73,10 +72,10 @@ class Goal : public SbObject
 class Level
 {
  public:
-  Level(int num, std::shared_ptr<TTF_Font> font );
+  Level(int num, const SbWorld& world, std::shared_ptr<TTF_Font> font );
   ~Level() = default;
   
-  void create_level(uint32_t num);
+  void create_level(uint32_t num, const SbWorld& world);
   void start_timer(){ time_message_.start_timer(); }
   void stop_timer(){ time_message_.stop_timer(); }
   Uint32 time() { return time_message_.time(); }
@@ -121,6 +120,7 @@ class Maze
   bool in_goal_ = false;
   uint32_t current_level_ = 0;
   SbWindow window_{name, SCREEN_WIDTH, SCREEN_HEIGHT};
+  SbWorld world_;
   SDL_Rect camera_;
   std::unique_ptr<SbFpsDisplay> fps_display_ = nullptr;
   SbTimer reset_timer_;

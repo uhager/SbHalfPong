@@ -24,8 +24,6 @@ author: Ulrike Hager
 #include "SbMaze.h"
 
 
-/////  globals /////
-SbWindow* SbObject::window;
 
 /*! Ball implementation
  */
@@ -61,6 +59,7 @@ Ball::check_goal(const Goal& goal)
 void
 Ball::handle_event(const SDL_Event& event)
 {
+  SbObject::handle_event( event );
   double sensitivity = 1.0 ; // controller needs slower acceleration
   SbControlDir direction = SbControlDir::none;
 
@@ -196,25 +195,18 @@ Ball::move(const std::vector<std::unique_ptr<SbObject>>& level)
 
 
 void
-Ball::reset()
+Ball::reset(const SbWorld& world)
 {
   goal_ = false;
   velocity_x_ = 0;
   velocity_y_ = 0;
-  bounding_rect_.x = (int)(0.9*LEVEL_WIDTH);
-  bounding_rect_.y = (int)(0.92*LEVEL_HEIGHT);
+  bounding_rect_.x = (int)(0.9*world.width());
+  bounding_rect_.y = (int)(0.92* world.height());
   move_bounding_box();
   timer_.start();
 }
 
 
-
-Uint32
-Ball::resetball(Uint32 interval, void *param )
-{
-  ((Ball*)param)->reset();
-  return(0);
-}
 
 
 
@@ -255,17 +247,17 @@ Goal::Goal(int x, int y, int width, int height)
 
 /*! Level implementation
  */
-Level::Level(int num, std::shared_ptr<TTF_Font> font)
-  : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
+Level::Level(int num, const SbWorld& world, std::shared_ptr<TTF_Font> font)
+  : width_(world.width()), height_(world.height()), level_num_(num)
   , time_message_(0.9,0,0.1,0.07)
 {
-  create_level(level_num_);
+  create_level(level_num_, world);
   time_message_.set_font(font);
 }
 
 
 void
-Level::create_level(uint32_t num)
+Level::create_level(uint32_t num, const SbWorld& world)
 {
   if ( !tiles_.empty() )
     tiles_.clear();
@@ -283,14 +275,17 @@ Level::create_level(uint32_t num)
     int h = box.h * height_;
     tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
   }
-  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
+   goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*world.width()), (int)(goal.y*world.height()), (int)(goal.w*world.width()), (int)(goal.h*world.width()) } );
 }
 
 
 void
 Level::handle_event(const SDL_Event& event)
 {
+  for (auto& t: tiles_)
+    t->handle_event( event );
   time_message_.handle_event(event);
+  goal_->handle_event( event );
 }
 
 
@@ -312,6 +307,9 @@ Level::render(const SDL_Rect &camera)
 Maze::Maze()
 {
   SbObject::window = &window_ ;
+  SbWorld::window = &window_;
+  world_ = {LEVEL_WIDTH, LEVEL_HEIGHT};
+  SbObject::world = &world_;
 
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
     if (SDL_IsGameController(i)) {
@@ -348,10 +346,13 @@ Maze::initialize()
   //   throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
   ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(current_level_, font.font() ) );
+  level_ = std::unique_ptr<Level>( new Level(current_level_, world_, font.font() ) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font() ) );
   highscore_ = std::unique_ptr<SbHighScore> (new SbHighScore( font.font(), "maze.save" , "Your time:", "s" ) );
   highscore_->set_precision(2);
+
+  ball_->center_camera(camera_, world_.width(), world_.height());
+
 }
 
 
@@ -361,8 +362,8 @@ Maze::reset()
   if ( (++current_level_) == levels.size() ) {
     current_level_ = 0;
   }
-  level_->create_level( current_level_ );
-  ball_->reset();
+  level_->create_level( current_level_, world_ );
+  ball_->reset(world_);
   level_->start_timer();
   reset_timer_.reset();
   in_goal_ = false;
@@ -403,6 +404,7 @@ Maze::run()
 	  quit = true;
 	}
 	window_.handle_event(event);
+	world_.handle_event( event );
 	ball_->handle_event(event);
 	level_->handle_event( event );
 	fps_display_->handle_event(event);
@@ -414,7 +416,7 @@ Maze::run()
 	
 
       ball_->move(level_->tiles());
-      ball_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
+      ball_->center_camera(camera_, world_.width(), world_.height());
       if ( !in_goal_ ) {
 	in_goal_ = ball_->check_goal(level_->goal());
 	if (in_goal_) {

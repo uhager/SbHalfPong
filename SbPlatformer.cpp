@@ -14,9 +14,6 @@
 #include "SbPlatformer.h"
 
 
-/////  globals /////
-SbWindow* SbObject::window;
-
 
 /*! Player implementation
  */
@@ -202,7 +199,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	bounding_rect_.x = tile->pos_x() + tile->width();
 	break;
       case SbHitPosition::top :
-	velocity_y_ = 0; //tile->velocity_y();
+	velocity_y_ = tile->velocity_y();
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
 	//in_air_deltav_ = 0;
@@ -390,6 +387,9 @@ Level::render(const SDL_Rect &camera)
 Platformer::Platformer()
 {
   SbObject::window = &window_ ;
+  SbWorld::window = &window_;
+  world_ = {LEVEL_WIDTH, LEVEL_HEIGHT};
+  SbObject::world = &world_;
 
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
     if (SDL_IsGameController(i)) {
@@ -477,6 +477,7 @@ Platformer::run()
 	  quit = true;
 	}
 	window_.handle_event(event);
+	world_.handle_event( event );
 	player_->handle_event(event);
 	//	level_->handle_event( event );
 	fps_display_->handle_event(event);
@@ -487,8 +488,8 @@ Platformer::run()
 	  reset();
 	
 
-      player_->move(level_->platforms());
       level_->move();
+      player_->move(level_->platforms());
       player_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
       if ( !in_exit_ ) {
 	in_exit_ = player_->check_exit(level_->exit());

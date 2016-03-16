@@ -24,7 +24,8 @@ author: Ulrike Hager
 #include "SbHalfPong.h"
 
 
-SbWindow* SbObject::window;
+
+//SbWindow* SbObject::window;
 
 
 /*! Paddle implementation
@@ -314,6 +315,9 @@ GameOver::GameOver(std::shared_ptr<TTF_Font> font)
 HalfPong::HalfPong()
 {
   SbObject::window = &window_ ;
+  SbWorld::window = &window_;
+  world_ = {window_.width(), window_.height()};
+  SbObject::world = &world_;
   SbFont font("resources/FreeSans.ttf", 120 );
   // font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
   // if ( !font_.get() )
@@ -368,6 +372,7 @@ HalfPong::run()
 	  }
 	}
 	window_.handle_event( event );
+	world_.handle_event( event );
 	std::for_each( objects.begin(), objects.end(),
 		       [event] (SbObject* obj) {obj->handle_event( event );} );
       }
