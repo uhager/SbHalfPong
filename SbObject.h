@@ -58,11 +58,14 @@ static SbWindow* window;
   virtual int move( );
   virtual void render() ;
   virtual void render(const SDL_Rect &camera);
+  virtual void was_hit();
+
   SbRectangle bounding_box() { return bounding_box_;};
   SDL_Rect bounding_rect() const {return bounding_rect_;}
   bool has_mouse(){return has_mouse_;}
   bool is_inside(int x, int y);
   void move_bounding_box();
+  void move_bounding_rect();
   std::string name(){return name_;}
   std::ostream& print_dimensions(std::ostream& os); 
   void start_timer() {timer_.start();}
@@ -70,11 +73,12 @@ static SbWindow* window;
   void set_color( int red, int green, int blue );
   Uint32 time() {return timer_.get_time();}
   bool timer_started() { return timer_.started(); }
-  virtual void was_hit();
   int width() const { return bounding_rect_.w;}
   int height() const { return bounding_rect_.h;}
   int pos_x() const { return bounding_rect_.x;}
   int pos_y() const { return bounding_rect_.y;}
+  double velocity_x() { return velocity_x_; }
+  double velocity_y() { return velocity_y_; }
   
 protected:
   SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;

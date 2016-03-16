@@ -156,6 +156,14 @@ SbObject::move_bounding_box()
 }
   
 
+void
+SbObject::move_bounding_rect()
+{
+  bounding_rect_.x = double(bounding_box_.x * window->width() );
+  bounding_rect_.y = double(bounding_box_.y * window->height() );
+}
+  
+
 
 std::ostream&
 SbObject::print_dimensions(std::ostream& os)

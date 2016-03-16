@@ -130,7 +130,7 @@ Player::handle_event(const SDL_Event& event)
 
   switch (direction) {
   case SbControlDir::up :
-    if (velocity_y_ == 0) {
+    if (on_surface_) {
       velocity_y_ = -1 * ( velocity_jump_ * sensitivity );
       on_surface_ = false;
       in_air_deltav_ = 0;
@@ -163,8 +163,20 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 
   Uint32 deltaT = timer_.get_time();
   if ( !on_surface_ ) {
-    velocity_y_ += 9e-7 * deltaT; // gravity
+    velocity_y_ += GRAVITY * deltaT; // gravity
   }
+  else if (on_surface_) {
+    double fric = friction_ * timer_.get_time();
+    if ( velocity_x_ > 0 ) {
+      velocity_x_ -= fric;
+      if (velocity_x_ < 0) velocity_x_ = 0;
+    }
+    else {
+      velocity_x_ += fric;
+      if (velocity_x_ > 0) velocity_x_ = 0;
+    }
+  }
+
   int x_step = (int)( window->width() * velocity_x_ * deltaT);
   int y_step = (int)( window->height() * velocity_y_ * deltaT);  
   bounding_rect_.y += y_step;
@@ -181,17 +193,19 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
       switch (hit) {
       case SbHitPosition::left :
 	if (velocity_x_ > 0 )
-	  velocity_x_ *= -1;  
+	  velocity_x_ = 0;
+	bounding_rect_.x = tile->pos_x() - bounding_rect_.w;
 	break;
       case SbHitPosition::right :
 	if (velocity_x_ < 0 )
-	  velocity_x_ *= -1;  
+	  velocity_x_ = 0;  
+	bounding_rect_.x = tile->pos_x() + tile->width();
 	break;
       case SbHitPosition::top :
-	velocity_y_ = 0;
+	velocity_y_ = 0; //tile->velocity_y();
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
-	//	in_air_deltav_ = 0;
+	//in_air_deltav_ = 0;
 	break;
       case SbHitPosition::bottom :
 	if (velocity_y_ < 0 )
@@ -261,12 +275,10 @@ Platform::move()
     }
   }
 
-  int x_step = (int)( window->width() * velocity_x_ * deltaT);
-  int y_step = (int)( window->height() * velocity_y_ * deltaT);  
-  bounding_rect_.y += y_step;
-  bounding_rect_.x += x_step;
+  bounding_box_.y += velocity_y_ * deltaT;
+  bounding_box_.x += velocity_x_ * deltaT;
 
-  move_bounding_box();
+  move_bounding_rect();
   timer_.start();
   return 0;
 }
