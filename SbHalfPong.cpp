@@ -47,7 +47,7 @@ void
 Paddle::handle_event(const SDL_Event& event)
 {
   
-  SbObject::handle_event( event );
+  //  SbObject::handle_event( event );
   if( event.type == SDL_KEYDOWN && event.key.repeat == 0 ) {
     switch( event.key.keysym.sym ) {
     case SDLK_UP: velocity_y_ -= velocity_; break;
@@ -367,11 +367,15 @@ HalfPong::run()
 	    break;
 	  }
 	}
-	window_.handle_event( event );
+	if ( window_.handle_event( event ) ) {
+	  std::for_each( objects.begin(), objects.end(),
+			 [] (SbObject* obj) {obj->update_size();} );
+	}
 	std::for_each( objects.begin(), objects.end(),
 		       [event] (SbObject* obj) {obj->handle_event( event );} );
+
       }
-      
+            
       move_objects();
       render( objects );
     }

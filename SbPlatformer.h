@@ -144,6 +144,7 @@ class Level
   void render(const SDL_Rect &camera);
   uint32_t level_number() { return level_num_; }
   //  void handle_event(const SDL_Event& event);
+  void update_size();
   void move();
   
  private:

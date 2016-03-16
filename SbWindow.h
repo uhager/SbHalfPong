@@ -52,11 +52,11 @@ class SbWindow
   ~SbWindow();
   
   void close();
-  void handle_event(const SDL_Event& event);
+  int handle_event(const SDL_Event& event);
   int height(){return height_;}
   SDL_Renderer* renderer() {return renderer_.get();}
   int width() {return width_;}
-  bool new_size() { return new_size_; }
+  // bool new_size() { return new_size_; }
   
  private:
   std::unique_ptr<SDL_Renderer, DeleteRenderer> renderer_ = nullptr;
@@ -64,7 +64,7 @@ class SbWindow
   int width_;
   int height_;
   SDL_Color background_color_;  
-  bool new_size_ = false;
+  // bool new_size_ = false;
   bool is_fullscreen = false;
 };
 

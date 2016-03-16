@@ -113,14 +113,12 @@ SbObject::check_hit(const SbObject& toHit)
 
 
 void
-SbObject::handle_event(const SDL_Event& event)
+SbObject::update_size()
 {
-  if ( window->new_size() ) {
     bounding_rect_.x = static_cast<int>(window->width() * bounding_box_.x);
     bounding_rect_.y = static_cast<int>(window->height() * bounding_box_.y);
     bounding_rect_.w = static_cast<int>(window->width() * bounding_box_.w); 
     bounding_rect_.h = static_cast<int>(window->height() * bounding_box_.h); 
-  }
 }
 
 

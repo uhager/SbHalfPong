@@ -54,10 +54,11 @@ static SbWindow* window;
  
  void center_camera(SDL_Rect& camera, int width, int height) ;
  SbHitPosition check_hit(const SbObject& toHit);
- virtual void handle_event(const SDL_Event& event);
+ virtual void handle_event(const SDL_Event& event){}
   virtual int move( );
   virtual void render() ;
   virtual void render(const SDL_Rect &camera);
+  virtual void update_size();
   virtual void was_hit();
 
   SbRectangle bounding_box() { return bounding_box_;};

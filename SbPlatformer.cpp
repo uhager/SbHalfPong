@@ -387,6 +387,14 @@ Level::render(const SDL_Rect &camera)
 
 
 
+void
+Level::update_size()
+{
+
+}
+
+
+
 Platformer::Platformer()
 {
   SbObject::window = &window_ ;
@@ -476,10 +484,11 @@ Platformer::run()
 		    && event.cbutton.button == SDL_CONTROLLER_BUTTON_B ) {
 	  quit = true;
 	}
-	window_.handle_event(event);
+	if (window_.handle_event(event)){
+	  fps_display_->update_size();
+	}
 	player_->handle_event(event);
 	//	level_->handle_event( event );
-	fps_display_->handle_event(event);
       }
       /// end event polling
 

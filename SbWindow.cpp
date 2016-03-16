@@ -42,22 +42,20 @@ SbWindow::~SbWindow()
 }
 
 
-void
+int
 SbWindow::handle_event(const SDL_Event& event)
 {
-  new_size_ = false;
   if( event.type == SDL_WINDOWEVENT ) {
     switch( event.window.event ) {
     case SDL_WINDOWEVENT_SIZE_CHANGED:
       width_ = event.window.data1;
       height_ = event.window.data2;
-      new_size_ = true;
-      break;
+      return 1;
     }
   }
   else if( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
-    if (state[SDL_SCANCODE_LALT]) return;  // toggles fps display
+    if (state[SDL_SCANCODE_LALT]) return 0;  // toggles fps display
 
     if ( is_fullscreen ) {
       SDL_SetWindowFullscreen( window_.get(), SDL_FALSE );
@@ -69,8 +67,9 @@ SbWindow::handle_event(const SDL_Event& event)
       SDL_GetWindowSize( window_.get(), &width_, &height_ );
       is_fullscreen = true;
     }
-    new_size_ = true;
+    return 1;
   }
+  return 0;
 }
 
 

@@ -44,7 +44,6 @@ SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, double x, double y, d
 void
 SbFpsDisplay::handle_event(const SDL_Event& event)
 {
-  SbObject::handle_event( event );
   if ( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
     if (state[SDL_SCANCODE_LALT]){

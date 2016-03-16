@@ -287,12 +287,6 @@ Level::create_level(uint32_t num)
 }
 
 
-void
-Level::handle_event(const SDL_Event& event)
-{
-  time_message_.handle_event(event);
-}
-
 
 void
 Level::render(const SDL_Rect &camera)
@@ -305,6 +299,13 @@ Level::render(const SDL_Rect &camera)
   strstr << std::fixed << std::setprecision(1) << time << " s" ;
   time_message_.set_text( strstr.str() );
   time_message_.render();
+}
+
+
+void
+Level::update_size()
+{
+  time_message_.update_size();
 }
 
 
@@ -402,9 +403,12 @@ Maze::run()
 		    && event.cbutton.button == SDL_CONTROLLER_BUTTON_B ) {
 	  quit = true;
 	}
-	window_.handle_event(event);
+	if (window_.handle_event(event) ){
+	  ball_->update_size();
+	  fps_display_->update_size();
+	  level_->update_size();
+	}
 	ball_->handle_event(event);
-	level_->handle_event( event );
 	fps_display_->handle_event(event);
       }
       /// end event polling
