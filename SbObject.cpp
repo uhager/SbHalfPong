@@ -12,41 +12,62 @@
 #include "SbObject.h"
 
 
-
-SbObject::SbObject(int x, int y, int width, int height)
+SbObject::SbObject( SbRectangle bounding_box, SbDimension& ref)
+  : reference_(ref), bounding_box_(bounding_box)
 {
   texture_ = std::make_shared<SbTexture>();
-  bounding_rect_ = {x,y,width, height};
-  bounding_box_ = { double(bounding_rect_.x)/window->width()
-		    , double(bounding_rect_.y)/window->height()
-		    , double(bounding_rect_.w)/window->width()
-		    , double(bounding_rect_.h)/window->height() };
+  bounding_rect_.x = static_cast<int>(bounding_box_.x * ref.w);
+  bounding_rect_.y = static_cast<int>(bounding_box_.y * ref.h );
+  bounding_rect_.w = static_cast<int>(bounding_box_.w * ref.w );
+  bounding_rect_.h = static_cast<int>(bounding_box_.h * ref.h );
 }
 
 
-
-SbObject::SbObject(double x, double y, double width, double height)
+SbObject::SbObject( SDL_Rect bounding_rect, SbDimension& ref)
+  : reference_(ref), bounding_rect_(bounding_rect)
 {
   texture_ = std::make_shared<SbTexture>();
-  bounding_box_ = {x,y,width, height};
-  bounding_rect_.x = static_cast<int>(x * window->width() );
-  bounding_rect_.y = static_cast<int>(y * window->height() );
-  bounding_rect_.w = static_cast<int>(width * window->width() );
-  bounding_rect_.h = static_cast<int>(height * window->height() );
+  bounding_box_ = { double(bounding_rect_.x)/ref.w
+		    , double(bounding_rect_.y)/ref.h
+		    , double(bounding_rect_.w)/ref.w
+		    , double(bounding_rect_.h)/ref.h };
+
 }
 
 
-
-SbObject::SbObject( SbRectangle bounding_box)
-  : bounding_box_(bounding_box)
+SbObject::SbObject(const SbObject& toMove)
+  : reference_ (toMove.reference_)
+  , bounding_rect_ (toMove.bounding_rect_)
+  , bounding_box_ (toMove.bounding_box_ )
+  , velocity_y_ (toMove.velocity_y_)
+  , velocity_x_ ( toMove.velocity_x_)
+  , velocity_ ( toMove.velocity_ )
+  , texture_( toMove.texture_)
+  , color_ (toMove.color_)
+  , name_ ( toMove.name_)
+  , render_me_ (toMove.render_me_)
 {
-  texture_ = std::make_shared<SbTexture>();
-  bounding_rect_.x = static_cast<int>(bounding_box_.x * window->width() );
-  bounding_rect_.y = static_cast<int>(bounding_box_.y * window->height() );
-  bounding_rect_.w = static_cast<int>(bounding_box_.w * window->width() );
-  bounding_rect_.h = static_cast<int>(bounding_box_.h * window->height() );
 }
 
+
+SbObject&
+SbObject::operator=(SbObject&& toMove)
+{
+  reference_ = std::move(toMove.reference_);
+  bounding_rect_ = std::move(toMove.bounding_rect_);
+  bounding_box_ = std::move(toMove.bounding_box_) ;
+  velocity_y_ = toMove.velocity_y_;
+  velocity_x_ = toMove.velocity_x_;
+  velocity_ = toMove.velocity_;
+  texture_ = toMove.texture_;
+  color_ = toMove.color_;
+  name_ = toMove.name_;
+  has_mouse_ = false;
+  render_me_ = std::move(toMove.render_me_);
+  toMove.render_me_ = false;
+  toMove.texture_ = nullptr;
+  return *this;
+}
 
 
 void

@@ -14,6 +14,7 @@
 
 
 SbWindow::SbWindow(std::string title, int width, int height)
+  : dimension_{width, height}
 {
   SDL_Window* win =  SDL_CreateWindow( "Basic half-Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if( win == nullptr ){
@@ -30,8 +31,6 @@ SbWindow::SbWindow(std::string title, int width, int height)
   renderer_ = std::unique_ptr<SDL_Renderer, DeleteRenderer>( ren, DeleteRenderer() );
   SDL_SetRenderDrawColor( renderer_.get(), 0x0, 0x0, 0x0, 0x0 );
 
-  width_ = width;
-  height_ = height;
 }
 
 
@@ -48,8 +47,8 @@ SbWindow::handle_event(const SDL_Event& event)
   if( event.type == SDL_WINDOWEVENT ) {
     switch( event.window.event ) {
     case SDL_WINDOWEVENT_SIZE_CHANGED:
-      width_ = event.window.data1;
-      height_ = event.window.data2;
+      dimension_.w = event.window.data1;
+      dimension_.h = event.window.data2;
       return 1;
     }
   }
@@ -59,12 +58,12 @@ SbWindow::handle_event(const SDL_Event& event)
 
     if ( is_fullscreen ) {
       SDL_SetWindowFullscreen( window_.get(), SDL_FALSE );
-      SDL_GetWindowSize( window_.get(), &width_, &height_ );
+      SDL_GetWindowSize( window_.get(), &dimension_.w, &dimension_.h );
       is_fullscreen = false;
     }
     else {
       SDL_SetWindowFullscreen( window_.get(), SDL_WINDOW_FULLSCREEN_DESKTOP );
-      SDL_GetWindowSize( window_.get(), &width_, &height_ );
+      SDL_GetWindowSize( window_.get(), &dimension_.w, &dimension_.h );
       is_fullscreen = true;
     }
     return 1;

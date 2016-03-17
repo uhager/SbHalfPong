@@ -29,8 +29,8 @@ SbWindow* SbObject::window;
 
 /*! Paddle implementation
  */
-Paddle::Paddle()
-  : SbObject(SCREEN_WIDTH - 70, 200, 20, 80)
+Paddle::Paddle( SbDimension& ref )
+  : SbObject(SDL_Rect{SCREEN_WIDTH - 70, 200, 20, 80}, ref)
 {
   //  bounding_rect_ = {}; 
   velocity_y_ = 0;
@@ -41,6 +41,17 @@ Paddle::Paddle()
   name_ = "paddle";
 }
 
+
+Paddle::Paddle(SDL_Rect rect, SbDimension& ref)
+  : SbObject(rect, ref)
+{
+  velocity_y_ = 0;
+  velocity_ = 1.0/1200.0;
+  SDL_Color color = {210, 160, 10, 0};
+  texture_ = std::make_shared<SbTexture>();
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
+  name_ = "paddle";
+}
 
 
 void
@@ -99,8 +110,8 @@ Paddle::move()
     
 
 
-Spark::Spark(double x, double y, double width, double height)
-  : SbObject(x,y,width,height)
+Spark::Spark(double x, double y, double width, double height, SbDimension& ref)
+  : SbObject(SbRectangle{x,y,width,height}, ref)
 {
 }
 
@@ -126,8 +137,8 @@ Spark::expire(Uint32 interval, void* param)
 
 /*! Ball implementation
  */
-Ball::Ball()
-  : SbObject(50, 300, 25, 25)
+Ball::Ball(SbDimension& ref)
+  : SbObject(SDL_Rect{50, 300, 25, 25}, ref)
 {
   velocity_y_ = 1.0/1500.0;
   velocity_x_ = 1.0/1500.0;
@@ -165,7 +176,7 @@ Ball::create_sparks()
     double d = distr_size(generator_);
     x += ( bounding_box_.x + bounding_box_.w/2);
     y += ( bounding_box_.y + bounding_box_.h/2);
-    Spark toAdd(x, y, d, d);
+    Spark toAdd(x, y, d, d, reference_);
     toAdd.index_ = i;
     toAdd.set_texture( texture_ );
     toAdd.lifetime_ = Uint32(distr_lifetime(generator_));
@@ -301,8 +312,8 @@ Ball::resetball(Uint32 interval, void *param )
 
 /*! GameOver implementation
  */
-GameOver::GameOver(std::shared_ptr<TTF_Font> font)
-  : SbMessage(0.35,0.58,0.3,0.2)
+GameOver::GameOver(std::shared_ptr<TTF_Font> font, SbDimension& ref)
+  : SbMessage(SbRectangle{0.35,0.58,0.3,0.2}, ref)
 {
   name_ = "gameover" ;
   font_ = font;
@@ -318,15 +329,17 @@ HalfPong::HalfPong()
   // font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
   // if ( !font_.get() )
   //     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
-
-  ball_ = std::unique_ptr<Ball>( new Ball );
-  paddle_ = std::unique_ptr<Paddle>( new Paddle );
-  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay(font.font()) );
-  game_over_ = std::unique_ptr<GameOver>( new GameOver( font.font() ) );
-  high_score_ = std::unique_ptr<SbHighScore>( new SbHighScore( font.font(), "halfpong.save", "Score:" ) );
+  SbDimension& ref = window_.get_dimension();
+  ball_ = std::unique_ptr<Ball>( new Ball(ref) );
+  paddle_ = std::unique_ptr<Paddle>( new Paddle(ref) );
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font(), SbRectangle{0, 0, 0.06, 0.035}, ref ) );
+  game_over_ = std::unique_ptr<GameOver>( new GameOver( font.font(), ref ) );
+  high_score_ = std::unique_ptr<SbHighScore>( new SbHighScore( font.font(), SbRectangle{0.2,0.4,0.6,0.23}, ref ) );
+  high_score_->savefile = "halfpong.save";
+  high_score_->prefix = "Score:" ;
   high_score_->set_precision(0);
-  lives_ = std::unique_ptr<SbMessage>( new SbMessage(0.2, 0.003, 0.13, 0.07 ) );
-  score_text_ = std::unique_ptr<SbMessage>( new SbMessage( 0.5, 0.003, 0.13, 0.07 ) );
+  lives_ = std::unique_ptr<SbMessage>( new SbMessage(SbRectangle{0.2, 0.003, 0.13, 0.07}, ref ) );
+  score_text_ = std::unique_ptr<SbMessage>( new SbMessage( SbRectangle{0.5, 0.003, 0.13, 0.07}, ref ) );
   lives_->set_font(font.font());
   score_text_->set_font(font.font());
   lives_->set_text( "Lives: " + std::to_string(goal_counter_) );

@@ -13,6 +13,7 @@
 
 #include <SDL2/SDL.h>
 
+#include "SbObject.h"
 
 struct DeleteWindow
 {
@@ -53,16 +54,16 @@ class SbWindow
   
   void close();
   int handle_event(const SDL_Event& event);
-  int height(){return height_;}
+  int height() const {return dimension_.h;}
   SDL_Renderer* renderer() {return renderer_.get();}
-  int width() {return width_;}
+  int width() const {return dimension_.w;}
   // bool new_size() { return new_size_; }
+  SbDimension& get_dimension() { return dimension_;}
   
  private:
   std::unique_ptr<SDL_Renderer, DeleteRenderer> renderer_ = nullptr;
   std::unique_ptr<SDL_Window, DeleteWindow> window_ = nullptr;
-  int width_;
-  int height_;
+  SbDimension dimension_ ;
   SDL_Color background_color_;  
   // bool new_size_ = false;
   bool is_fullscreen = false;

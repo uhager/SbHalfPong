@@ -27,24 +27,13 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 
-struct DeleteFont
-{
-  void operator()(TTF_Font* font) const {
-    if ( font ) {
-      TTF_CloseFont( font );
-      font = nullptr;
-    }
-  }
-};
-
-
-
 
 
 class Paddle : public SbObject
 {
 public:
-  Paddle();
+  Paddle(SbDimension& ref);
+  Paddle(SDL_Rect rect, SbDimension& ref);
   void handle_event(const SDL_Event& event);
   int move();
 };
@@ -54,7 +43,7 @@ public:
 class Ball : public SbObject
 {
 public:
-  Ball();
+  Ball(SbDimension& ref);
   /*! \retval 1 if ball in goal
     \retval 0 else
    */
@@ -87,7 +76,7 @@ class Spark : public SbObject
 {
   friend class Ball;
 public:
-  Spark(double x, double y, double width, double height);
+  Spark(double x, double y, double width, double height, SbDimension& ref);
  
   static Uint32 expire(Uint32 interval, void* param);
   
@@ -108,7 +97,7 @@ private:
 class GameOver : public SbMessage
 {
  public:
-  GameOver(std::shared_ptr<TTF_Font> font);
+  GameOver(std::shared_ptr<TTF_Font> font, SbDimension& ref);
 };
 
 

@@ -13,8 +13,9 @@
 
 #include "SbMessage.h"
 
-SbMessage::SbMessage(double x, double y, double width, double height)
-  : SbObject(x,y,width,height)
+
+SbMessage::SbMessage(SbRectangle box, SbDimension& ref)
+  : SbObject(box, ref)
 {
 }
 
@@ -31,8 +32,8 @@ SbMessage::set_text(std::string message)
 
 
 
-SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, double x, double y, double width, double height)
-  : SbMessage(x,y,width,height)
+SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref)
+  : SbMessage(box, ref)
 {
   name_ = "fps";
   set_font(font);
@@ -81,8 +82,8 @@ SbFpsDisplay::update()
 
 /*! SbHighScore implementation
  */
-SbHighScore::SbHighScore(std::shared_ptr<TTF_Font> font, std::string filename, std::string prefix, std::string postfix)
-  : SbMessage(0.2,0.4,0.6,0.23), savefile_(filename), prefix_(prefix), postfix_(postfix)
+SbHighScore::SbHighScore(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref)
+  : SbMessage(box, ref)
 {
   font_ = font;
   name_ = "gameover" ;  //!< same name to render only when game over.
@@ -110,10 +111,10 @@ SbHighScore::check_highscore(uint32_t score, bool(SbHighScore::*fctn)(uint32_t, 
   std::ostringstream strstr;
   if (result) {
     write_highscores();
-    strstr << "*** New record: " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix_ << " ***" ; 
+    strstr << "*** New record: " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix << " ***" ; 
   }
   else {
-    strstr << prefix_ << " " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix_ << " -- Record: " << highscores_.at(level) * multiplier << postfix_ ;
+    strstr << prefix << " " << std::fixed << std::setprecision(precision_) << score * multiplier << postfix << " -- Record: " << highscores_.at(level) * multiplier << postfix ;
   }
   set_text( strstr.str() );
   return result;
@@ -138,9 +139,9 @@ SbHighScore::higher(uint32_t score, uint32_t level)
 void
 SbHighScore::write_highscores( )
 {
-  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "w+b" );
+  SDL_RWops* file = SDL_RWFromFile( savefile.c_str() , "w+b" );
   if ( !file ) {
-    throw std::runtime_error("[SbHighScore::write_highscores] Error: Couldn't open file " + savefile_ + ":\n" + SDL_GetError() );
+    throw std::runtime_error("[SbHighScore::write_highscores] Error: Couldn't open file " + savefile + ":\n" + SDL_GetError() );
   }
   uint32_t size = highscores_.size();
   SDL_RWwrite( file, &size, sizeof(uint32_t), 1 );
@@ -157,7 +158,7 @@ SbHighScore::write_highscores( )
 std::vector<uint32_t>
 SbHighScore::read_highscores( )
 {
-  SDL_RWops* file = SDL_RWFromFile( savefile_.c_str() , "rb" );
+  SDL_RWops* file = SDL_RWFromFile( savefile.c_str() , "rb" );
   if ( file ) {
     uint32_t max = 0;
     SDL_RWread( file, &max, sizeof(uint32_t), 1 );

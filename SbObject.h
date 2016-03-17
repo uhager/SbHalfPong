@@ -41,15 +41,29 @@ struct SbRectangle
 };
 
 
+struct SbDimension
+{
+  SbDimension(int wn, int hn)
+  : w(wn), h(hn)
+  {}
+  SbDimension(SDL_Rect rect)
+  : w(rect.w), h(rect.h)
+  {}
+  SbDimension() = default;
+  int w = 0;
+  int h = 0;
+};
+
   
 class SbObject
 {
 public:
   SbObject() = default;
-  SbObject(int x, int y, int width, int height);
-  SbObject(double x, double y, double width, double height);
-  SbObject( SbRectangle bounding_box);
-
+  SbObject( SbRectangle bounding_box, SbDimension& ref);
+  SbObject( SDL_Rect bounding_rect, SbDimension& ref);
+  SbObject( const SbObject& toCopy);
+  SbObject& operator=(SbObject&& toMove);
+  
 static SbWindow* window;
  
  void center_camera(SDL_Rect& camera, int width, int height) ;
@@ -82,6 +96,7 @@ static SbWindow* window;
   double velocity_y() { return velocity_y_; }
   
 protected:
+  SbDimension& reference_;
   SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;
   //! location and size in terms of window width and height
   SbRectangle bounding_box_ = {0.5, 0.5, 0.05, 0.05} ;
