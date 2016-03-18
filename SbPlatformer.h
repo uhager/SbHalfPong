@@ -82,7 +82,7 @@ struct Velocity
 class Player : public SbObject
 {
  public:
-  Player();
+  Player(const SbDimension* ref);
 
   bool check_exit(const Exit& goal);
   void handle_event(const SDL_Event& event);
@@ -111,7 +111,8 @@ class Platform : public SbObject
 {
   friend class Level;
  public:
-    Platform(int x, int y, int width, int height);
+  Platform(int x, int y, int width, int height, const SbDimension* ref);
+  Platform( SbRectangle bounding_box, const SbDimension* ref );
     int move();
     
  private:
@@ -127,29 +128,30 @@ class Exit : public SbObject
 {
  public:
   Exit(int x, int y, int width, int height);
-
+  Exit(SbRectangle box, const SbDimension* ref);
 };
 
 
 class Level
 {
  public:
-  Level(uint32_t num);
+  Level(uint32_t num, const SbDimension* window_ref);
 
   void create_level(uint32_t num);
    Exit const& exit() const {return *exit_;}
   std::vector<std::unique_ptr<SbObject>> const& platforms() const {return platforms_; }
-  uint32_t width() { return width_; }
-  uint32_t height() {return height_; }
+  uint32_t width() { return dimension_.w; }
+  uint32_t height() {return dimension_.h; }
   void render(const SDL_Rect &camera);
   uint32_t level_number() { return level_num_; }
   //  void handle_event(const SDL_Event& event);
-  void update_size();
   void move();
+  void update_size();
+  const SbDimension* get_dimension() const {return &dimension_;} 
   
  private:
-  uint32_t width_ = LEVEL_WIDTH;
-  uint32_t height_ = LEVEL_HEIGHT;
+  SbDimension dimension_ = {100,100};
+  const SbDimension* window_ref_;
   uint32_t level_num_ = 0;
   std::unique_ptr<Exit> exit_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> platforms_;
@@ -187,9 +189,10 @@ class Platformer
 
 struct LevelCoordinates
 {
-LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g, std::vector<MovementRange> r, std::vector<Velocity> v)
-: tiles(t),goal(g), ranges(r), velocities(v)
+LevelCoordinates(SbDimension d, std::vector<SbRectangle> t, SbRectangle g, std::vector<MovementRange> r, std::vector<Velocity> v)
+: dimension(d), tiles(t),goal(g), ranges(r), velocities(v)
   {}
+  SbDimension dimension;
   std::vector<SbRectangle> tiles;
   SbRectangle goal;
   std::vector<MovementRange> ranges;
@@ -202,6 +205,7 @@ LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g, std::vector<Movement
 ////////////////////
 std::vector<LevelCoordinates> levels;
 
+SbDimension dim0 = {LEVEL_WIDTH, LEVEL_HEIGHT};
 std::vector<SbRectangle> lev0 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.0,0.03,1.0}, {0.0, 0.97, 1.0, 0.03}  /* outer boxes */
 				 , {0.85, 0.75, 0.12, 0.03 }
 				 ,{0.03,0.77,0.12,0.03}, {0.18, 0.57, 0.12, 0.03}, {0.03, 0.37, 0.12, 0.03} 
@@ -215,6 +219,7 @@ std::vector<Velocity> velocity0 = { {0, 0}, {0, 0}, {0, 0}, {0, 0}
 				    ,{0, 0.0001}
 				    ,{ 0.0001, 0}, {0.0001, 0.0001}, {0,0}
 };
+
 
 ////////////////////
 //// levels end ////

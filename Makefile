@@ -37,4 +37,4 @@ SbPlatformer: $(PLATOBJS)
 	$(CXX) $(CXXFLAGS) $(PLATOBJS) $(SDL_INCLUDES) $(SDL_LIBS) -o $@
 
 clean:
-	rm -f *.o *.so $(OBJS) SbHalfPong SbMaze SbPlatformer
+	rm -f *.o *.so SbHalfPong SbMaze SbPlatformer

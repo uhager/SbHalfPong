@@ -12,6 +12,8 @@
 #include "SbObject.h"
 
 
+SbWindow* SbObject::window;
+
 SbObject::SbObject( SbRectangle bounding_box, const SbDimension* ref)
   : reference_(ref), bounding_box_(bounding_box)
 {
@@ -39,8 +41,8 @@ SbObject::SbObject( SDL_Rect bounding_rect, const SbDimension* ref)
 void
 SbObject::center_camera(SDL_Rect& camera, int w, int h) 
 {
-  camera.w = reference_->w;
-  camera.h = reference_->h;
+  camera.w = window->width();
+  camera.h = window->height();
   camera.x = pos_x() + width()/2 - camera.w/2;
   camera.y = pos_y() + height()/2 - camera.h/2;
   if ( camera.x < 0 )

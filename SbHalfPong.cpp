@@ -24,7 +24,7 @@ author: Ulrike Hager
 #include "SbHalfPong.h"
 
 
-SbWindow* SbObject::window;
+//SbWindow* SbObject::window;
 
 
 /*! Paddle implementation

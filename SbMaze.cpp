@@ -24,8 +24,6 @@ author: Ulrike Hager
 #include "SbMaze.h"
 
 
-/////  globals /////
-SbWindow* SbObject::window;
 
 /*! Ball implementation
  */

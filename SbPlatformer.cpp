@@ -14,14 +14,10 @@
 #include "SbPlatformer.h"
 
 
-/////  globals /////
-SbWindow* SbObject::window;
-
-
 /*! Player implementation
  */
-Player::Player()
-  : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.9*LEVEL_HEIGHT), (int)(0.02*LEVEL_WIDTH), (int)(0.07*LEVEL_HEIGHT))
+Player::Player(const SbDimension* ref)
+  : SbObject(SDL_Rect{(int)(0.9*ref->w), (int)(0.9*ref->h), (int)(0.02*ref->w), (int)(0.07*ref->h)}, ref)
 {
   velocity_y_ = 0;
   velocity_x_ = 0;
@@ -242,12 +238,23 @@ Player::reset()
 
 /*! Platform implementation
  */
-Platform::Platform(int x, int y, int width, int height)
-  : SbObject(x, y, width, height)
+Platform::Platform(int x, int y, int width, int height, const SbDimension* ref)
+  : SbObject(SDL_Rect{x, y, width, height}, ref)
 {
   color_ = {40, 40, 160, 0};
   texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
+  name_ = "tile";
+}
+
+
+
+Platform::Platform( SbRectangle bounding_box, const SbDimension* ref )
+  : SbObject( bounding_box, ref)
+{
+  SDL_Color color = {40, 40, 160, 0};
+  texture_ = std::make_shared<SbTexture>();
+  texture_->from_rectangle( window->renderer(), bounding_rect_.w, bounding_rect_.h, color );
   name_ = "tile";
 }
 
@@ -315,10 +322,19 @@ Platform::set_limits(MovementLimits limit)
 
 /*! Exit
  */
-Exit::Exit(int x, int y, int width, int height)
-  : SbObject(x, y, width, height)
+// Exit::Exit(int x, int y, int width, int height, const SbDimension* ref)
+//   : SbObject(SDL_Rect{x, y, width, height}, ref)
+// {
+//   color_ = {200, 100, 100};
+//   texture_ = std::make_shared<SbTexture>();
+//   texture_->from_rectangle(window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
+//   name_ = "goal";
+// }
+
+
+Exit::Exit(SbRectangle box, const SbDimension* ref)
+  : SbObject(box, ref)
 {
-  color_ = {200, 100, 100};
   texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle(window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
   name_ = "goal";
@@ -326,10 +342,9 @@ Exit::Exit(int x, int y, int width, int height)
 
 
 
-
 /*! Level implementation
  */
-Level::Level(uint32_t num)
+Level::Level(uint32_t num, const SbDimension* window_ref)
   : level_num_(num)
 {
   create_level(level_num_);
@@ -345,27 +360,29 @@ Level::create_level(uint32_t num)
   if (num > levels.size() )
     throw std::runtime_error("[Level::create_level] No level found for level number = " + std::to_string(num)  );
 
+  dimension_ = levels.at(num).dimension;
   std::vector< SbRectangle > &coords = (levels.at(num).tiles);
   SbRectangle& goal = levels.at(num).goal;
   std::vector<MovementRange>& ranges = (levels.at(num).ranges);
   std::vector<Velocity>& vels = (levels.at(num).velocities);
   for ( uint32_t i = 0; i < coords.size(); ++i ){
-    int x = coords.at(i).x * width_;
-    int y = coords.at(i).y * height_;
-    int w = coords.at(i).w * width_;
-    int h = coords.at(i).h * height_;
+    // int x = coords.at(i).x * width_;
+    // int y = coords.at(i).y * height_;
+    // int w = coords.at(i).w * width_;
+    // int h = coords.at(i).h * height_;
     
-    Platform* p = new Platform( x, y, w, h );
+    Platform* p = new Platform( coords.at(i), get_dimension() );
     if (ranges.size() > i && vels.size() > i){
       MovementRange& rg = ranges.at(i);
-      MovementLimits lmt = rg.to_limits(width_, height_);
+      MovementLimits lmt = rg.to_limits(dimension_.w, dimension_.h);
       p->set_limits(lmt);
       p->set_velocities(vels.at(i));
     }
     
     platforms_.emplace_back( std::unique_ptr<SbObject>( p ) );
   }
-  exit_ = std::unique_ptr<Exit>( new Exit{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_HEIGHT) } );
+  exit_ = std::unique_ptr<Exit>( new Exit{ goal, get_dimension() } );
+  //  exit_ = std::unique_ptr<Exit>( new Exit{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_HEIGHT) } );
 }
 
 
@@ -408,7 +425,7 @@ Platformer::Platformer()
     }
   }
 
-  levels.emplace_back(lev0, goal0, range0, velocity0);
+levels.emplace_back(dim0, lev0, goal0, range0, velocity0);
 
   initialize();
 }
@@ -431,9 +448,9 @@ Platformer::initialize()
   // if ( !font )
   //   throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-  player_ = std::unique_ptr<Player>( new Player );
-  level_ = std::unique_ptr<Level>( new Level(current_level_) );
-  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font() ) );
+  level_ = std::unique_ptr<Level>( new Level(current_level_, window_.get_dimension()) );
+  player_ = std::unique_ptr<Player>( new Player(level_->get_dimension()) );
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font(), SbRectangle{0, 0, 0.06, 0.035}, window_.get_dimension() ) );
   
 }
 
