@@ -16,7 +16,7 @@
 class SbMessage : public SbObject
 {
 public:
-  SbMessage(SbRectangle box, SbDimension& ref);
+  SbMessage(SbRectangle box, const SbDimension* ref);
 
   void set_font(std::shared_ptr<TTF_Font> font){ font_ = font;}
   void set_text(std::string text);
@@ -31,7 +31,7 @@ class SbFpsDisplay : public SbMessage
 {
  public:
   //  SbFpsDisplay(std::shared_ptr<TTF_Font> font, double x = 0, double y = 0, double width = 0.06, double height= 0.035);
-  SbFpsDisplay(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref);
+  SbFpsDisplay(std::shared_ptr<TTF_Font> font, SbRectangle box, const SbDimension* ref);
   void handle_event(const SDL_Event& event) override;
   void set_number_frames( uint32_t n );
   void update();
@@ -48,7 +48,7 @@ class SbHighScore : public SbMessage
 {
  public:
   //  SbHighScore(std::shared_ptr<TTF_Font> font, std::string filename = "game.save", std::string prefix = "Your result", std::string postfix = "" );
-  SbHighScore(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref);
+  SbHighScore(std::shared_ptr<TTF_Font> font, SbRectangle box, const SbDimension* ref);
   bool check_highscore( uint32_t score, bool(SbHighScore::*fctn)(uint32_t, uint32_t), uint32_t level = 0, double multiplier = 1.0);
   std::vector<uint32_t> highscores() { return highscores_; }
   std::vector<uint32_t> read_highscores( );

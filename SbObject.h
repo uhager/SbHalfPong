@@ -59,10 +59,8 @@ class SbObject
 {
 public:
   SbObject() = default;
-  SbObject( SbRectangle bounding_box, SbDimension& ref);
-  SbObject( SDL_Rect bounding_rect, SbDimension& ref);
-  SbObject( const SbObject& toCopy);
-  SbObject& operator=(SbObject&& toMove);
+  SbObject( SbRectangle bounding_box, const SbDimension* ref);
+  SbObject( SDL_Rect bounding_rect, const SbDimension* ref);
   
 static SbWindow* window;
  
@@ -96,7 +94,7 @@ static SbWindow* window;
   double velocity_y() { return velocity_y_; }
   
 protected:
-  SbDimension& reference_;
+  const SbDimension* reference_;
   SDL_Rect bounding_rect_ = {70, 200, 20, 70} ;
   //! location and size in terms of window width and height
   SbRectangle bounding_box_ = {0.5, 0.5, 0.05, 0.05} ;

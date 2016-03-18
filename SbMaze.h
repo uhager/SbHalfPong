@@ -32,7 +32,7 @@ const std::string name = "Maze";
 class Ball : public SbObject
 {
 public:
-  Ball();
+  Ball(const SbDimension* ref);
 
   bool check_goal(const Goal& goal);
   void handle_event(const SDL_Event& event);
@@ -41,7 +41,6 @@ public:
   /*! Reset after goal.
    */
   void reset();
-  static Uint32 resetball(Uint32 interval, void *param );
   void set_momentum_loss(double ml) {momentum_loss_ = ml;}
   
 private:
@@ -56,8 +55,8 @@ private:
 class Tile : public SbObject
 {
  public:
-  Tile(int x, int y, int width, int height);
-  Tile( SbRectangle bounding_box );
+  Tile(int x, int y, int width, int height, const SbDimension* ref);
+  Tile( SbRectangle bounding_box, const SbDimension* ref );
 };
 
 
@@ -65,7 +64,8 @@ class Tile : public SbObject
 class Goal : public SbObject
 {
  public:
-  Goal(int x, int y, int width, int height);
+  Goal(int x, int y, int width, int height, const SbDimension* ref);
+  Goal( SbRectangle bounding_box, const SbDimension* ref );
 };
 
 
@@ -73,7 +73,7 @@ class Goal : public SbObject
 class Level
 {
  public:
-  Level(int num, std::shared_ptr<TTF_Font> font );
+  Level(int num, std::shared_ptr<TTF_Font> font, const SbDimension* window_ref );
   ~Level() = default;
   
   void create_level(uint32_t num);
@@ -83,15 +83,16 @@ class Level
     
   Goal const& goal() const {return *goal_;}
   std::vector<std::unique_ptr<SbObject>> const& tiles() const {return tiles_; }
-  uint32_t width() { return width_; }
-  uint32_t height() {return height_; }
+  uint32_t width() { return dimension_.w; }
+  uint32_t height() {return dimension_.h; }
   void render(const SDL_Rect &camera);
   uint32_t level_number() { return level_num_; }
   void update_size();
+  const SbDimension* get_dimension() const {return &dimension_;} 
   
  private:
-  uint32_t width_;
-  uint32_t height_;
+  SbDimension dimension_ = {100,100};
+  const SbDimension* window_ref_;
   uint32_t level_num_ = 0;
   std::unique_ptr<Goal> goal_ = nullptr;
   std::vector<std::unique_ptr<SbObject>> tiles_;
@@ -130,11 +131,12 @@ class Maze
 
 struct LevelCoordinates
 {
-  LevelCoordinates(std::vector<SbRectangle> t, SbRectangle g)
-  : tiles(t),goal(g)
+LevelCoordinates(SbDimension d, std::vector<SbRectangle> t, SbRectangle g)
+: tiles(t),goal(g), dimension(d)
   {}
   std::vector<SbRectangle> tiles;
   SbRectangle goal;
+  SbDimension dimension;
 };
 
 
@@ -148,6 +150,7 @@ std::vector<SbRectangle> lev0 = {{0,0,1.0,0.05}, {0.95,0.0,0.05,1.0}, {0.0,0.,0.
 				 ,{ 0.85, 0.4, 0.03, 0.53 }	/* barrier next to goal*/				      
 	};
 SbRectangle goal0 = {0.4, 0.48, 0.03, 0.03};
+SbDimension dim0 = {LEVEL_WIDTH, LEVEL_HEIGHT};
 
 std::vector<SbRectangle> lev1 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.,0.03,1.0}, {0.0, 0.97, 1.0, 0.03}  /* outer boxes */
 				 , {0.15,0.85,0.18,0.03}, {0.4, 0.85, 0.52, 0.03} /* lower horiz. bars */
@@ -155,7 +158,7 @@ std::vector<SbRectangle> lev1 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.,0.
 				 , {0.45, 0.6, 0.55, 0.03}   /* middle horiz. bar */
 };
 SbRectangle goal1 = {0.85, 0.1, 0.03, 0.03};
-
+SbDimension dim1 = {LEVEL_WIDTH, LEVEL_HEIGHT};
 ////////////////////
 //// levels end ////
 ////////////////////

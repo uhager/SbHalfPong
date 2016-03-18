@@ -32,8 +32,8 @@ const int SCREEN_HEIGHT = 600;
 class Paddle : public SbObject
 {
 public:
-  Paddle(SbDimension& ref);
-  Paddle(SDL_Rect rect, SbDimension& ref);
+  Paddle(const SbDimension* ref);
+  Paddle(SDL_Rect rect, const SbDimension* ref);
   void handle_event(const SDL_Event& event);
   int move();
 };
@@ -43,7 +43,7 @@ public:
 class Ball : public SbObject
 {
 public:
-  Ball(SbDimension& ref);
+  Ball(const SbDimension* ref);
   /*! \retval 1 if ball in goal
     \retval 0 else
    */
@@ -53,7 +53,6 @@ public:
    */
   void reset();
   static Uint32 resetball(Uint32 interval, void *param );
-  Uint32 remove_spark(Uint32 interval, void *param, int index );
 
   
 private:
@@ -76,10 +75,8 @@ class Spark : public SbObject
 {
   friend class Ball;
 public:
-  Spark(double x, double y, double width, double height, SbDimension& ref);
+  Spark(double x, double y, double width, double height, const SbDimension* ref);
  
-  static Uint32 expire(Uint32 interval, void* param);
-  
   int index() { return index_;}
   bool is_dead() {return is_dead_;}  
   Uint32 lifetime() { return lifetime_;}
@@ -97,7 +94,7 @@ private:
 class GameOver : public SbMessage
 {
  public:
-  GameOver(std::shared_ptr<TTF_Font> font, SbDimension& ref);
+  GameOver(std::shared_ptr<TTF_Font> font, const SbDimension* ref);
 };
 
 

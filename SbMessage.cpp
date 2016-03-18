@@ -14,7 +14,7 @@
 #include "SbMessage.h"
 
 
-SbMessage::SbMessage(SbRectangle box, SbDimension& ref)
+SbMessage::SbMessage(SbRectangle box, const SbDimension* ref)
   : SbObject(box, ref)
 {
 }
@@ -32,7 +32,7 @@ SbMessage::set_text(std::string message)
 
 
 
-SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref)
+SbFpsDisplay::SbFpsDisplay(std::shared_ptr<TTF_Font> font, SbRectangle box, const SbDimension* ref)
   : SbMessage(box, ref)
 {
   name_ = "fps";
@@ -82,7 +82,7 @@ SbFpsDisplay::update()
 
 /*! SbHighScore implementation
  */
-SbHighScore::SbHighScore(std::shared_ptr<TTF_Font> font, SbRectangle box, SbDimension& ref)
+SbHighScore::SbHighScore(std::shared_ptr<TTF_Font> font, SbRectangle box, const SbDimension* ref)
   : SbMessage(box, ref)
 {
   font_ = font;

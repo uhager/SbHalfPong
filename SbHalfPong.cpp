@@ -29,7 +29,7 @@ SbWindow* SbObject::window;
 
 /*! Paddle implementation
  */
-Paddle::Paddle( SbDimension& ref )
+Paddle::Paddle( const SbDimension* ref )
   : SbObject(SDL_Rect{SCREEN_WIDTH - 70, 200, 20, 80}, ref)
 {
   //  bounding_rect_ = {}; 
@@ -42,7 +42,7 @@ Paddle::Paddle( SbDimension& ref )
 }
 
 
-Paddle::Paddle(SDL_Rect rect, SbDimension& ref)
+Paddle::Paddle(SDL_Rect rect, const SbDimension* ref)
   : SbObject(rect, ref)
 {
   velocity_y_ = 0;
@@ -110,34 +110,17 @@ Paddle::move()
     
 
 
-Spark::Spark(double x, double y, double width, double height, SbDimension& ref)
+Spark::Spark(double x, double y, double width, double height, const SbDimension* ref)
   : SbObject(SbRectangle{x,y,width,height}, ref)
 {
 }
 
 
 
-Uint32 
-Spark::expire(Uint32 interval, void* param)
-{
-#ifdef DEBUG
-    std::cout << "[Spark::expire] interval " << interval << std::flush;
-#endif // DEBUG
-  Spark* spark = ((Spark*)param);
-#ifdef DEBUG
-    std::cout << "[Spark::expire] index " << spark->index_ << std::endl;
-#endif // DEBUG
-  if (spark) spark->is_dead_ = true;
-  return(0);
-}
-
-
-
-
 
 /*! Ball implementation
  */
-Ball::Ball(SbDimension& ref)
+Ball::Ball(const SbDimension* ref)
   : SbObject(SDL_Rect{50, 300, 25, 25}, ref)
 {
   velocity_y_ = 1.0/1500.0;
@@ -186,15 +169,6 @@ Ball::create_sparks()
     std::cout << "[Ball::create_sparks] index " << i << " - lifetime " << (sparks_.back()).lifetime() << std::endl;
 #endif // DEBUG
   }
-}
-
-
-
-void
-Ball::delete_spark(int index)
-{
-  std::remove_if( sparks_.begin(), sparks_.end(),
-		  [index](Spark& spark) -> bool { return spark.index() == index;} );
 }
 
 
@@ -262,15 +236,6 @@ Ball::move(const SDL_Rect& paddleBox)
 
 
 
-Uint32
-Ball::remove_spark(Uint32 interval, void *param, int index )
-{
-  ((Ball*)param)->delete_spark(index);
-  return(0);
-}
-
-
-
 void
 Ball::render()
 {
@@ -312,7 +277,7 @@ Ball::resetball(Uint32 interval, void *param )
 
 /*! GameOver implementation
  */
-GameOver::GameOver(std::shared_ptr<TTF_Font> font, SbDimension& ref)
+GameOver::GameOver(std::shared_ptr<TTF_Font> font, const SbDimension* ref)
   : SbMessage(SbRectangle{0.35,0.58,0.3,0.2}, ref)
 {
   name_ = "gameover" ;
@@ -329,7 +294,7 @@ HalfPong::HalfPong()
   // font_ = std::shared_ptr<TTF_Font>( TTF_OpenFont( "resources/FreeSans.ttf", 120 ), DeleteFont() );
   // if ( !font_.get() )
   //     throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
-  SbDimension& ref = window_.get_dimension();
+  const SbDimension* ref = window_.get_dimension();
   ball_ = std::unique_ptr<Ball>( new Ball(ref) );
   paddle_ = std::unique_ptr<Paddle>( new Paddle(ref) );
   fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font(), SbRectangle{0, 0, 0.06, 0.035}, ref ) );

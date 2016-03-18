@@ -58,7 +58,7 @@ class SbWindow
   SDL_Renderer* renderer() {return renderer_.get();}
   int width() const {return dimension_.w;}
   // bool new_size() { return new_size_; }
-  SbDimension& get_dimension() { return dimension_;}
+  const SbDimension* get_dimension() const { return &dimension_;}
   
  private:
   std::unique_ptr<SDL_Renderer, DeleteRenderer> renderer_ = nullptr;

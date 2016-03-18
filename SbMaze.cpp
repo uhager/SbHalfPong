@@ -29,8 +29,8 @@ SbWindow* SbObject::window;
 
 /*! Ball implementation
  */
-Ball::Ball()
-  : SbObject((int)(0.9*LEVEL_WIDTH), (int)(0.92*LEVEL_HEIGHT), 25, 25)
+Ball::Ball(const SbDimension* ref)
+  : SbObject(SDL_Rect{(int)(0.9*ref->w), (int)(0.92*ref->h), 25, 25}, ref)
 {
   velocity_y_ = 0;
   velocity_x_ = 0;
@@ -201,27 +201,19 @@ Ball::reset()
   goal_ = false;
   velocity_x_ = 0;
   velocity_y_ = 0;
-  bounding_rect_.x = (int)(0.9*LEVEL_WIDTH);
-  bounding_rect_.y = (int)(0.92*LEVEL_HEIGHT);
+  bounding_rect_.x = (int)(0.9*reference_->w);
+  bounding_rect_.y = (int)(0.92*reference_->h);
   move_bounding_box();
   timer_.start();
 }
 
 
 
-Uint32
-Ball::resetball(Uint32 interval, void *param )
-{
-  ((Ball*)param)->reset();
-  return(0);
-}
-
-
 
 /*! Tile implementation
  */
-Tile::Tile(int x, int y, int width, int height)
-  : SbObject(x, y, width, height)
+Tile::Tile(int x, int y, int width, int height, const SbDimension* ref)
+  : SbObject(SDL_Rect{x, y, width, height}, ref)
 {
   SDL_Color color = {40, 40, 160, 0};
   texture_ = std::make_shared<SbTexture>();
@@ -230,8 +222,8 @@ Tile::Tile(int x, int y, int width, int height)
 }
 
 
-Tile::Tile( SbRectangle bounding_box )
-  : SbObject( bounding_box)
+Tile::Tile( SbRectangle bounding_box, const SbDimension* ref )
+  : SbObject( bounding_box, ref)
 {
   SDL_Color color = {40, 40, 160, 0};
   texture_ = std::make_shared<SbTexture>();
@@ -243,8 +235,17 @@ Tile::Tile( SbRectangle bounding_box )
 
 /*! Goal implementation
  */
-Goal::Goal(int x, int y, int width, int height)
-  : SbObject(x, y, width, height)
+Goal::Goal(int x, int y, int width, int height, const SbDimension* ref)
+  : SbObject(SDL_Rect{x, y, width, height}, ref)
+{
+  texture_ = std::make_shared<SbTexture>();
+  texture_->from_file(window->renderer(), "resources/goal.png", bounding_rect_.w, bounding_rect_.h );
+  name_ = "goal";
+}
+
+
+Goal::Goal(SbRectangle box, const SbDimension* ref)
+  : SbObject(box, ref)
 {
   texture_ = std::make_shared<SbTexture>();
   texture_->from_file(window->renderer(), "resources/goal.png", bounding_rect_.w, bounding_rect_.h );
@@ -255,9 +256,9 @@ Goal::Goal(int x, int y, int width, int height)
 
 /*! Level implementation
  */
-Level::Level(int num, std::shared_ptr<TTF_Font> font)
-  : width_(LEVEL_WIDTH), height_(LEVEL_HEIGHT), level_num_(num)
-  , time_message_(0.9,0,0.1,0.07)
+Level::Level(int num, std::shared_ptr<TTF_Font> font, const SbDimension* window_ref)
+  : level_num_(num)
+  , time_message_(SbRectangle{0.9,0,0.1,0.07}, window_ref)
 {
   create_level(level_num_);
   time_message_.set_font(font);
@@ -273,17 +274,14 @@ Level::create_level(uint32_t num)
   if (num > levels.size() )
     throw std::runtime_error("[Level::create_level] No level found for level number = " + std::to_string(num)  );
 
+  dimension_ = levels.at(num).dimension;
   std::vector< SbRectangle > &coords = (levels.at(num).tiles);
   SbRectangle& goal = levels.at(num).goal;
 
-   for ( auto box: coords ){
-    int x = box.x * width_;
-    int y = box.y * height_;
-    int w = box.w * width_;
-    int h = box.h * height_;
-    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( x, y, w, h ) ) );
+  for ( auto box: coords ){
+    tiles_.emplace_back( std::unique_ptr<SbObject>(new Tile( box, get_dimension() ) ) );
   }
-  goal_ = std::unique_ptr<Goal>( new Goal{ (int)(goal.x*LEVEL_WIDTH), (int)(goal.y*LEVEL_HEIGHT), (int)(goal.w*LEVEL_WIDTH), (int)(goal.h*LEVEL_WIDTH) } );
+  goal_ = std::unique_ptr<Goal>( new Goal{ goal, get_dimension() } );
 }
 
 
@@ -323,8 +321,8 @@ Maze::Maze()
     }
   }
 
-  levels.emplace_back(lev0, goal0);
-  levels.emplace_back(lev1, goal1);
+  levels.emplace_back(dim0, lev0, goal0);
+  levels.emplace_back(dim1, lev1, goal1);
 
   initialize();
 
@@ -348,10 +346,13 @@ Maze::initialize()
   // if ( !font_ )
   //   throw std::runtime_error( "TTF_OpenFont: " + std::string( TTF_GetError() ) );
 
-  ball_ = std::unique_ptr<Ball>( new Ball );
-  level_ = std::unique_ptr<Level>( new Level(current_level_, font.font() ) );
-  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font() ) );
-  highscore_ = std::unique_ptr<SbHighScore> (new SbHighScore( font.font(), "maze.save" , "Your time:", "s" ) );
+  level_ = std::unique_ptr<Level>( new Level(current_level_, font.font(), window_.get_dimension() ) );
+  ball_ = std::unique_ptr<Ball>( new Ball(level_->get_dimension()) );
+  fps_display_ = std::unique_ptr<SbFpsDisplay>( new SbFpsDisplay( font.font(), SbRectangle{0, 0, 0.06, 0.035}, window_.get_dimension() ) );
+  highscore_ = std::unique_ptr<SbHighScore> (new SbHighScore( font.font(), SbRectangle{0.2,0.4,0.6,0.23}, window_.get_dimension() ) );
+  highscore_->savefile = "maze.save";
+  highscore_->prefix = "Time:" ;
+  highscore_->postfix = "s";
   highscore_->set_precision(2);
 }
 

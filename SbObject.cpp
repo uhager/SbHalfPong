@@ -12,69 +12,35 @@
 #include "SbObject.h"
 
 
-SbObject::SbObject( SbRectangle bounding_box, SbDimension& ref)
+SbObject::SbObject( SbRectangle bounding_box, const SbDimension* ref)
   : reference_(ref), bounding_box_(bounding_box)
 {
   texture_ = std::make_shared<SbTexture>();
-  bounding_rect_.x = static_cast<int>(bounding_box_.x * ref.w);
-  bounding_rect_.y = static_cast<int>(bounding_box_.y * ref.h );
-  bounding_rect_.w = static_cast<int>(bounding_box_.w * ref.w );
-  bounding_rect_.h = static_cast<int>(bounding_box_.h * ref.h );
+  bounding_rect_.x = static_cast<int>(bounding_box_.x * ref->w);
+  bounding_rect_.y = static_cast<int>(bounding_box_.y * ref->h );
+  bounding_rect_.w = static_cast<int>(bounding_box_.w * ref->w );
+  bounding_rect_.h = static_cast<int>(bounding_box_.h * ref->h );
 }
 
 
-SbObject::SbObject( SDL_Rect bounding_rect, SbDimension& ref)
+SbObject::SbObject( SDL_Rect bounding_rect, const SbDimension* ref)
   : reference_(ref), bounding_rect_(bounding_rect)
 {
   texture_ = std::make_shared<SbTexture>();
-  bounding_box_ = { double(bounding_rect_.x)/ref.w
-		    , double(bounding_rect_.y)/ref.h
-		    , double(bounding_rect_.w)/ref.w
-		    , double(bounding_rect_.h)/ref.h };
+  bounding_box_ = { double(bounding_rect_.x)/ref->w
+		    , double(bounding_rect_.y)/ref->h
+		    , double(bounding_rect_.w)/ref->w
+		    , double(bounding_rect_.h)/ref->h };
 
 }
 
-
-SbObject::SbObject(const SbObject& toMove)
-  : reference_ (toMove.reference_)
-  , bounding_rect_ (toMove.bounding_rect_)
-  , bounding_box_ (toMove.bounding_box_ )
-  , velocity_y_ (toMove.velocity_y_)
-  , velocity_x_ ( toMove.velocity_x_)
-  , velocity_ ( toMove.velocity_ )
-  , texture_( toMove.texture_)
-  , color_ (toMove.color_)
-  , name_ ( toMove.name_)
-  , render_me_ (toMove.render_me_)
-{
-}
-
-
-SbObject&
-SbObject::operator=(SbObject&& toMove)
-{
-  reference_ = std::move(toMove.reference_);
-  bounding_rect_ = std::move(toMove.bounding_rect_);
-  bounding_box_ = std::move(toMove.bounding_box_) ;
-  velocity_y_ = toMove.velocity_y_;
-  velocity_x_ = toMove.velocity_x_;
-  velocity_ = toMove.velocity_;
-  texture_ = toMove.texture_;
-  color_ = toMove.color_;
-  name_ = toMove.name_;
-  has_mouse_ = false;
-  render_me_ = std::move(toMove.render_me_);
-  toMove.render_me_ = false;
-  toMove.texture_ = nullptr;
-  return *this;
-}
 
 
 void
 SbObject::center_camera(SDL_Rect& camera, int w, int h) 
 {
-  camera.w = window->width();
-  camera.h = window->height();
+  camera.w = reference_->w;
+  camera.h = reference_->h;
   camera.x = pos_x() + width()/2 - camera.w/2;
   camera.y = pos_y() + height()/2 - camera.h/2;
   if ( camera.x < 0 )
@@ -136,10 +102,10 @@ SbObject::check_hit(const SbObject& toHit)
 void
 SbObject::update_size()
 {
-    bounding_rect_.x = static_cast<int>(window->width() * bounding_box_.x);
-    bounding_rect_.y = static_cast<int>(window->height() * bounding_box_.y);
-    bounding_rect_.w = static_cast<int>(window->width() * bounding_box_.w); 
-    bounding_rect_.h = static_cast<int>(window->height() * bounding_box_.h); 
+    bounding_rect_.x = static_cast<int>(reference_->w * bounding_box_.x);
+    bounding_rect_.y = static_cast<int>(reference_->h * bounding_box_.y);
+    bounding_rect_.w = static_cast<int>(reference_->w * bounding_box_.w); 
+    bounding_rect_.h = static_cast<int>(reference_->h * bounding_box_.h); 
 }
 
 
@@ -170,16 +136,16 @@ SbObject::move( )
 void
 SbObject::move_bounding_box()
 {
-  bounding_box_.x = double(bounding_rect_.x) / window->width();
-  bounding_box_.y = double(bounding_rect_.y) / window->height();
+  bounding_box_.x = double(bounding_rect_.x) / reference_->w;
+  bounding_box_.y = double(bounding_rect_.y) / reference_->h;
 }
   
 
 void
 SbObject::move_bounding_rect()
 {
-  bounding_rect_.x = double(bounding_box_.x * window->width() );
-  bounding_rect_.y = double(bounding_box_.y * window->height() );
+  bounding_rect_.x = double(bounding_box_.x * reference_->w );
+  bounding_rect_.y = double(bounding_box_.y * reference_->h );
 }
   
 
@@ -187,7 +153,7 @@ SbObject::move_bounding_rect()
 std::ostream&
 SbObject::print_dimensions(std::ostream& os)
 {
-  os << "window = " << window->height() << "x" << window->width()
+  os << "window = " << reference_->h << "x" << reference_->w
      << " bounding box: " << bounding_box_.x << "," << bounding_box_.y
      << " - " << bounding_box_.w << "x" << bounding_box_.h
      << " ;bounding rect: " << bounding_rect_.x << "," << bounding_rect_.y
