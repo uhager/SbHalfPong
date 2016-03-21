@@ -57,7 +57,6 @@ Player::check_exit(const Exit& exit)
 }
 
 
-
 void
 Player::handle_event(const SDL_Event& event)
 {
@@ -156,7 +155,6 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
     return result;
   }
 
-
   Uint32 deltaT = timer_.get_time();
   if ( !on_surface_ ) {
     velocity_y_ += GRAVITY * deltaT; // gravity
@@ -173,8 +171,8 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
     }
   }
 
-  int x_step = (int)( window->width() * velocity_x_ * deltaT);
-  int y_step = (int)( window->height() * velocity_y_ * deltaT);  
+  int x_step = (int)( reference_->w * velocity_x_ * deltaT);
+  int y_step = (int)( reference_->h * velocity_y_ * deltaT);  
   bounding_rect_.y += y_step;
   bounding_rect_.x += x_step;
 
@@ -198,7 +196,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	bounding_rect_.x = tile->pos_x() + tile->width();
 	break;
       case SbHitPosition::top :
-	velocity_y_ = 0; //tile->velocity_y();
+	velocity_y_ = tile->velocity_y(); // =0;
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
 	//in_air_deltav_ = 0;

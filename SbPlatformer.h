@@ -19,8 +19,8 @@ const int LEVEL_WIDTH = 2000;
 const int LEVEL_HEIGHT = 1500;
 const int CONTROLLER_DEADZONE = 7000;
 const std::string name = "Platformer";
-const double GRAVITY = 2.5e-6;
-const double JUMP = 1.0/500.0;
+const double GRAVITY = 3.5e-6;
+const double JUMP = 1.0/700.0;
 const double FRICTION = 1e-7; 
 
 class Exit;
@@ -96,7 +96,7 @@ class Player : public SbObject
   bool check_air_deltav( double sensitivity );
   
   bool exit_ = false;
-  double velocity_max_ = 1.0/800.0;
+  double velocity_max_ = 1.0/1200.0;
   double velocity_jump_ = JUMP;
   bool on_surface_ = true;
   uint32_t in_air_deltav_ = 0;
