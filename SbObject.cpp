@@ -65,22 +65,22 @@ SbObject::check_hit(const SbObject& toHit)
   const SDL_Rect& hit_box = toHit.bounding_rect();
   bool in_xrange = false, in_yrange = false, x_hit_left = false, x_hit_right = false, y_hit_top = false, y_hit_bottom = false ;
 
-  if ( bounding_rect_.x + bounding_rect_.w/2 >= hit_box.x &&
-       bounding_rect_.x + bounding_rect_.w/2 <= hit_box.x + hit_box.w )
+  if ( bounding_rect_.x + (bounding_rect_.w)/2  >= hit_box.x &&
+       bounding_rect_.x + (bounding_rect_.w)/2 <= hit_box.x + hit_box.w )
     in_xrange = true;
       
-  if ( bounding_rect_.y + bounding_rect_.h/2 >= hit_box.y  &&
-       bounding_rect_.y + bounding_rect_.h/2 <= hit_box.y + hit_box.h)
+  if ( bounding_rect_.y + bounding_rect_.h/2  >= hit_box.y  &&
+       bounding_rect_.y + bounding_rect_.h/2  <= hit_box.y + hit_box.h)
      in_yrange = true;
 
-  if ( bounding_rect_.x + bounding_rect_.w >= hit_box.x               &&
+  if ( bounding_rect_.x + bounding_rect_.w  >= hit_box.x               &&
        bounding_rect_.x                   <= hit_box.x + hit_box.w ) {
     if ( bounding_rect_.x > hit_box.x ) 
       x_hit_right = true;
     else if ( bounding_rect_.x + bounding_rect_.w < hit_box.x + hit_box.w)
       x_hit_left = true;
   }
-  if ( bounding_rect_.y + bounding_rect_.h >= hit_box.y               &&
+  if ( bounding_rect_.y + bounding_rect_.h  >= hit_box.y               &&
        bounding_rect_.y                   <= hit_box.y + hit_box.h ) {
     if ( bounding_rect_.y > hit_box.y ) 
       y_hit_bottom = true;
@@ -146,8 +146,8 @@ SbObject::move_bounding_box()
 void
 SbObject::move_bounding_rect()
 {
-  bounding_rect_.x = double(bounding_box_.x * reference_->w );
-  bounding_rect_.y = double(bounding_box_.y * reference_->h );
+  bounding_rect_.x = int(bounding_box_.x * reference_->w );
+  bounding_rect_.y = int(bounding_box_.y * reference_->h );
 }
   
 

@@ -17,7 +17,7 @@
 /*! Player implementation
  */
 Player::Player(const SbDimension* ref)
-  : SbObject(SDL_Rect{(int)(0.9*ref->w), (int)(0.9*ref->h), (int)(0.02*ref->w), (int)(0.07*ref->h)}, ref)
+  : SbObject(SbRectangle{0.9, 0.9, 0.02, 0.07}, ref)
 {
   velocity_y_ = 0;
   velocity_x_ = 0;
@@ -171,10 +171,13 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
     }
   }
 
-  int x_step = (int)( reference_->w * velocity_x_ * deltaT);
-  int y_step = (int)( reference_->h * velocity_y_ * deltaT);  
-  bounding_rect_.y += y_step;
-  bounding_rect_.x += x_step;
+  // int x_step = (int)( reference_->w * velocity_x_ * deltaT);
+  // int y_step = (int)( reference_->h * velocity_y_ * deltaT);  
+  // bounding_rect_.y += y_step;
+  // bounding_rect_.x += x_step;
+  bounding_box_.x += velocity_x_ * deltaT;
+  bounding_box_.y += velocity_y_ * deltaT;
+  move_bounding_rect();
 
   //  int hits = 0 ;   // can only hit max 2 tiles at once
   on_surface_ = false;
@@ -196,7 +199,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	bounding_rect_.x = tile->pos_x() + tile->width();
 	break;
       case SbHitPosition::top :
-	velocity_y_ = tile->velocity_y(); // =0;
+	velocity_y_ = tile->velocity_y(); // 
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
 	//in_air_deltav_ = 0;
@@ -213,6 +216,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
       // 	break;
     }
   }
+
   move_bounding_box();
   timer_.start();
   return result;
@@ -511,7 +515,7 @@ Platformer::run()
 	  reset();
 	
 
-      player_->move(level_->platforms());
+	player_->move(level_->platforms());
       level_->move();
       player_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
       if ( !in_exit_ ) {

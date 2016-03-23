@@ -90,6 +90,10 @@ static SbWindow* window;
   int height() const { return bounding_rect_.h;}
   int pos_x() const { return bounding_rect_.x;}
   int pos_y() const { return bounding_rect_.y;}
+  int rel_w() const { return bounding_box_.w;}
+  int rel_h() const { return bounding_box_.h;}
+  int rel_x() const { return bounding_box_.x;}
+  int rel_y() const { return bounding_box_.y;}
   double velocity_x() { return velocity_x_; }
   double velocity_y() { return velocity_y_; }
   
