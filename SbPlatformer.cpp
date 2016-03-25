@@ -128,6 +128,7 @@ Player::handle_event(const SDL_Event& event)
     if (on_surface_) {
       velocity_y_ = -1 * ( velocity_jump_ * sensitivity );
       on_surface_ = false;
+      standing_on_ = nullptr;
       in_air_deltav_ = 0;
     }
     break;
@@ -145,6 +146,15 @@ Player::handle_event(const SDL_Event& event)
   }
 }
 
+
+
+void
+Player::follow_platform()
+{
+  if (standing_on_) {
+    bounding_rect_.y = (*standing_on_)->pos_y() - bounding_rect_.h;
+  }
+}
 
 
 int
@@ -200,8 +210,10 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
 	break;
       case SbHitPosition::top :
 	velocity_y_ = tile->velocity_y(); // 
+	//	velocity_x_ += tile->velocity_x(); // 
 	bounding_rect_.y = tile->pos_y() - bounding_rect_.h;
 	on_surface_ = true;
+	standing_on_ = &tile;
 	//in_air_deltav_ = 0;
 	break;
       case SbHitPosition::bottom :
@@ -337,6 +349,7 @@ Platform::set_limits(MovementLimits limit)
 Exit::Exit(SbRectangle box, const SbDimension* ref)
   : SbObject(box, ref)
 {
+   color_ = {200, 100, 100};
   texture_ = std::make_shared<SbTexture>();
   texture_->from_rectangle(window->renderer(), bounding_rect_.w, bounding_rect_.h, color_ );
   name_ = "goal";
@@ -511,12 +524,13 @@ Platformer::run()
       }
       /// end event polling
 
-      	if ( reset_timer_.get_time() > 1500 )
-	  reset();
+      if ( reset_timer_.get_time() > 1500 )
+	reset();
 	
 
-	player_->move(level_->platforms());
+      player_->move(level_->platforms());
       level_->move();
+      player_->follow_platform();
       player_->center_camera(camera_, LEVEL_WIDTH, LEVEL_HEIGHT);
       if ( !in_exit_ ) {
 	in_exit_ = player_->check_exit(level_->exit());

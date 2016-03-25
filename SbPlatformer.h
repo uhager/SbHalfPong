@@ -21,7 +21,7 @@ const int CONTROLLER_DEADZONE = 7000;
 const std::string name = "Platformer";
 const double GRAVITY = 3.5e-6;
 const double JUMP = 1.0/700.0;
-const double FRICTION = 1e-7; 
+const double FRICTION = 4e-7; 
 
 class Exit;
 class Platform;
@@ -87,6 +87,7 @@ class Player : public SbObject
   bool check_exit(const Exit& goal);
   void handle_event(const SDL_Event& event);
   int move(const std::vector<std::unique_ptr<SbObject>>& level);
+  void follow_platform();
   //  void render();
   /*! Reset after goal.
    */
@@ -94,9 +95,10 @@ class Player : public SbObject
 
  private:
   bool check_air_deltav( double sensitivity );
-  
+
+  const std::unique_ptr<SbObject>* standing_on_ = nullptr;
   bool exit_ = false;
-  double velocity_max_ = 1.0/1200.0;
+  double velocity_max_ = 1.0/2000.0;
   double velocity_jump_ = JUMP;
   bool on_surface_ = true;
   uint32_t in_air_deltav_ = 0;
@@ -212,12 +214,12 @@ std::vector<SbRectangle> lev0 = {{0,0,1.0,0.03}, {0.97,0.0,0.03,1.0}, {0.0,0.0,0
 	};
 SbRectangle goal0 = {0.03, 0.25, 0.03, 0.12};
 std::vector<MovementRange> range0 = { {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} /* outer frame */
-				      , {0, 0, 0.1, 0}
-				      , {0, 0.05, 0.0, 0.0}, {0.02, 0.07, 0.05, 0.05}, {0, 0, 0, 0}
+				      , {0, 0, 0.15, 0}
+				      , {0, 0.08, 0.0, 0.0}, {0.02, 0.1, 0.07, 0.05}, {0, 0, 0, 0}
 };
 std::vector<Velocity> velocity0 = { {0, 0}, {0, 0}, {0, 0}, {0, 0}
-				    ,{0, 0.0001}
-				    ,{ 0.0001, 0}, {0.0001, 0.0001}, {0,0}
+				    ,{0, 0.00005}
+				    ,{ 0.00005, 0}, {0.00003, 0.00003}, {0,0}
 };
 
 
