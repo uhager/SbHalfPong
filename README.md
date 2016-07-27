@@ -13,4 +13,4 @@ Use arrow keys or controller to move ball. When using controller, circle (B) but
 SbPlatformer: what it says on the tin. Work in progress...
 
 
-General controls: left-alt+f to toggle fps display, escape to quit.
+General controls: left-alt+f to toggle fps display, f to toggle fullscreen, escape to quit.

@@ -52,7 +52,7 @@ SbWindow::handle_event(const SDL_Event& event)
       return 1;
     }
   }
-  else if( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f ) {
+  else if( event.type == SDL_KEYDOWN && event.key.repeat == 0 && event.key.keysym.sym == SDLK_f ) {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
     if (state[SDL_SCANCODE_LALT]) return 0;  // toggles fps display
 
