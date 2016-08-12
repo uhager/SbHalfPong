@@ -63,7 +63,8 @@ Player::handle_event(const SDL_Event& event)
   double sensitivity = 1.0 ; // controller needs slower acceleration
   SbControlDir direction = SbControlDir::none;
 
-  if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
+  //  if( event.type == SDL_KEYDOWN && event.key.repeat == 0  ) {
+  if( event.type == SDL_KEYDOWN ) {
     switch( event.key.keysym.sym  ) {
     case SDLK_UP: case SDLK_SPACE: direction = SbControlDir::up; break;
     case SDLK_DOWN: direction = SbControlDir::down; break;
@@ -133,13 +134,16 @@ Player::handle_event(const SDL_Event& event)
     }
     break;
   case SbControlDir::left :
-    if (velocity_x_ > -1*velocity_max_ && check_air_deltav(sensitivity) ) {
-      velocity_x_ -=  ( velocity_ * sensitivity );
+    if (check_air_deltav(sensitivity) ) {
+      velocity_x_ =  -( velocity_ * sensitivity );
+      movement_start_position = pos_x();
     }
     break;
   case SbControlDir::right :
-    if (velocity_x_ < velocity_max_ && check_air_deltav(sensitivity) ) 
-      velocity_x_ +=  ( velocity_ * sensitivity );
+    if (check_air_deltav(sensitivity) ) {
+      velocity_x_ = ( velocity_ * sensitivity );
+      movement_start_position = pos_x();
+    }
     break;
   default:
     break;
@@ -169,6 +173,8 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
   if ( !on_surface_ ) {
     velocity_y_ += GRAVITY * deltaT; // gravity
   }
+  else if ( on_surface_ && std::abs(pos_x() - movement_start_position) > step_size ) velocity_x_ = 0;
+  /*
   else if (on_surface_) {
     double fric = friction_ * timer_.get_time();
     if ( velocity_x_ > 0 ) {
@@ -180,6 +186,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
       if (velocity_x_ > 0) velocity_x_ = 0;
     }
   }
+  */
 
   // int x_step = (int)( reference_->w * velocity_x_ * deltaT);
   // int y_step = (int)( reference_->h * velocity_y_ * deltaT);  

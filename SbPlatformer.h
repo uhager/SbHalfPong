@@ -23,8 +23,8 @@ const double GRAVITY = 3.5e-6;
 const double JUMP = 1.0/700.0;
 const double FRICTION = 4e-7; 
 const double PLAYER_VELOCITY = 1.0/2000.0;
-const double MOVEMENT_DURATION = 1.0;
-
+const double STEP_SIZE = LEVEL_WIDTH / 20;
+  
 class Exit;
 class Platform;
 class Level;
@@ -111,7 +111,9 @@ class Player : public SbObject
   uint32_t allowed_air_deltav_ = 2;
   double controller_sensitivity_ = 0.1;
   double friction_ = FRICTION;
-  SbTimer movement_timer;
+  double step_size = STEP_SIZE;
+  double movement_start_position;
+  
 };
 
 
