@@ -22,6 +22,8 @@ const std::string name = "Platformer";
 const double GRAVITY = 3.5e-6;
 const double JUMP = 1.0/700.0;
 const double FRICTION = 4e-7; 
+const double PLAYER_VELOCITY = 1.0/2000.0;
+const double MOVEMENT_DURATION = 1.0;
 
 class Exit;
 class Platform;
@@ -29,6 +31,8 @@ class Level;
 class Platformer;
 
 
+/* MovementLimits and MovementRange are used to define moving platforms
+ */
 struct MovementLimits
 {
   MovementLimits(uint32_t l, uint32_t r, uint32_t t, uint32_t b)
@@ -98,13 +102,16 @@ class Player : public SbObject
 
   const std::unique_ptr<SbObject>* standing_on_ = nullptr;
   bool exit_ = false;
-  double velocity_max_ = 1.0/2000.0;
+  double velocity_max_ = PLAYER_VELOCITY;
   double velocity_jump_ = JUMP;
   bool on_surface_ = true;
+  /*! allowed_air_deltav_ is the number of direction changes allowed in mid-air. in_air_deltav_ keeps track of direction changes in mid-air
+   */
   uint32_t in_air_deltav_ = 0;
   uint32_t allowed_air_deltav_ = 2;
   double controller_sensitivity_ = 0.1;
   double friction_ = FRICTION;
+  SbTimer movement_timer;
 };
 
 
