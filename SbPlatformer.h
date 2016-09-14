@@ -19,7 +19,7 @@ const int LEVEL_WIDTH = 2000;
 const int LEVEL_HEIGHT = 1500;
 const int CONTROLLER_DEADZONE = 7000;
 const std::string name = "Platformer";
-const double GRAVITY = 3.5e-6;
+const double GRAVITY = 2.5e-6;
 const double JUMP = 1.0/700.0;
 const double FRICTION = 4e-7; 
 const double PLAYER_VELOCITY = 1.0/2000.0;
@@ -113,7 +113,7 @@ class Player : public SbObject
   double friction_ = FRICTION;
   double step_size = STEP_SIZE;
   double movement_start_position;
-  
+  SbControlDir direction_ = SbControlDir::none;
 };
 
 
