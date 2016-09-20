@@ -170,7 +170,7 @@ Player::move(const std::vector<std::unique_ptr<SbObject>>& level)
   if ( !on_surface_ ) {
     velocity_y_ += GRAVITY * deltaT; // gravity
   }
-  else if ( on_surface_ && std::abs(pos_x() - movement_start_position) > step_size ) velocity_x_ = 0;
+  //  else if ( on_surface_ && std::abs(pos_x() - movement_start_position) > step_size ) velocity_x_ = 0;
   /*
   else if (on_surface_) {
     double fric = friction_ * timer_.get_time();
