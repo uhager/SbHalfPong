@@ -142,6 +142,9 @@ Player::handle_event(const SDL_Event& event)
       movement_start_position = pos_x();
     }
     break;
+  case SbControlDir::none :
+    velocity_x_ = 0;
+    break;
   default:
     break;
   }
